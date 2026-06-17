@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cursor Lab • Interactive Cursor Playground</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="A premium playground demonstrating three unique interactive WebGL and canvas cursor designs.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- WebGL / Canvas Container -->
+  <div id="canvas-container"></div>
+  
+  <!-- Instructions Overlay (fades out after interactive start) -->
+  <div class="interaction-tip">
+    <i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i>
+    <span>Move cursor to interact with the space</span>
+  </div>
+
+  <!-- Main Floating Dashboard Panel -->
+  <div class="control-panel glass-panel">
+    <div class="panel-header">
+      <a href="../index.html" class="back-link">
+        <i class="fa-solid fa-arrow-left-long"></i> Back to Portfolio
+      </a>
+      <div class="logo-area">
+        <span class="logo-pulse"></span>
+        <h2>CURSOR LAB</h2>
+      </div>
+      <p class="panel-subtitle">Interactive WebGL & Physics Experiments</p>
+    </div>
+    
+    <div class="panel-section">
+      <h3>Select Design</h3>
+      <div class="design-selectors">
+        <!-- Design 1 selector -->
+        <button class="design-btn active" data-design="vortex" id="btn-vortex">
+          <div class="btn-icon"><i class="fa-solid fa-tornado"></i></div>
+          <div class="btn-label">
+            <h4>Gravity Vortex</h4>
+            <p>Orbit Attractor Physics</p>
+          </div>
+        </button>
+        
+        <!-- Design 2 selector -->
+        <button class="design-btn" data-design="constellation" id="btn-constellation">
+          <div class="btn-icon"><i class="fa-solid fa-circle-nodes"></i></div>
+          <div class="btn-label">
+            <h4>Constellation Net</h4>
+            <p>Magnetic Node Connecting</p>
+          </div>
+        </button>
+        
+        <!-- Design 3 selector -->
+        <button class="design-btn" data-design="ripple" id="btn-ripple">
+          <div class="btn-icon"><i class="fa-solid fa-border-all"></i></div>
+          <div class="btn-label">
+            <h4>Ripple Grid</h4>
+            <p>Deformation Spring Mesh</p>
+          </div>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Real-time Controls / Sliders -->
+    <div class="panel-section">
+      <h3>Simulation Settings</h3>
+      
+      <div class="setting-group" id="control-speed">
+        <div class="setting-label">
+          <span>Interaction Speed</span>
+          <span class="value" id="val-speed">1.0x</span>
+        </div>
+        <input type="range" class="slider" id="slider-speed" min="0.2" max="2.0" step="0.1" value="1.0">
+      </div>
+      
+      <div class="setting-group" id="control-count">
+        <div class="setting-label">
+          <span>Particle Density</span>
+          <span class="value" id="val-count">200</span>
+        </div>
+        <input type="range" class="slider" id="slider-count" min="50" max="600" step="10" value="200">
+      </div>
+
+      <div class="setting-group" id="control-color">
+        <div class="setting-label">
+          <span>Energy Color</span>
+          <div class="color-indicator" id="color-preview"></div>
+        </div>
+        <div class="color-options">
+          <button class="color-dot active" data-color="#00f2fe" style="--color-theme: #00f2fe;"></button>
+          <button class="color-dot" data-color="#ff007f" style="--color-theme: #ff007f;"></button>
+          <button class="color-dot" data-color="#39ff14" style="--color-theme: #39ff14;"></button>
+          <button class="color-dot" data-color="#b026ff" style="--color-theme: #b026ff;"></button>
+          <button class="color-dot" data-color="#ffaa00" style="--color-theme: #ffaa00;"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Details Display -->
+    <div class="panel-section info-card-container">
+      <div class="info-card glass-subcard" id="description-card">
+        <h4 id="desc-title">Gravity Vortex</h4>
+        <p id="desc-text">Particles orbit dynamically around the cursor, accelerating as they fall into its gravity well. Uses Newton's law of gravitation combined with damping friction to generate realistic cosmic orbit simulations.</p>
+      </div>
+    </div>
+
+    <div class="panel-footer">
+      <p>Developer: <strong>Gokula Ramanaa</strong></p>
+      <div class="tech-tags">
+        <span>Three.js</span>
+        <span>WebGL</span>
+        <span>GSAP</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
