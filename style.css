@@ -974,3 +974,38 @@ body.intro-active .content-wrapper {
     font-size: 0.7rem;
   }
 }
+
+/* Audio Button */
+.audio-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 100px;
+  color: var(--text-muted);
+  padding: 10px 20px;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.audio-btn:hover {
+  background: rgba(244, 180, 58, 0.15);
+  border-color: rgba(244, 180, 58, 0.4);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(244, 180, 58, 0.15);
+}
+
+.audio-btn.active {
+  background: rgba(244, 180, 58, 0.2);
+  border-color: rgba(244, 180, 58, 0.5);
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(244, 180, 58, 0.2);
+}

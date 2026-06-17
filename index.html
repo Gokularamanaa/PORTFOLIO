@@ -23,7 +23,10 @@
 <body class="intro-active">
   <!-- Cinematic Intro Overlay -->
   <div class="intro-overlay" id="intro-overlay">
-    <button class="skip-btn" id="skip-intro-btn">Skip Intro <i class="fa-solid fa-angles-right"></i></button>
+    <div class="intro-controls" style="position: absolute; top: 32px; right: 32px; display: flex; gap: 12px; z-index: 10006;">
+      <button class="audio-btn" id="audio-toggle-btn"><i class="fa-solid fa-volume-xmark"></i> Sound Off</button>
+      <button class="skip-btn" id="skip-intro-btn" style="position: static;">Skip Intro <i class="fa-solid fa-angles-right"></i></button>
+    </div>
     <div class="intro-content">
       <h1 class="intro-title">
         <span class="first-name" id="name-gokula">GOKULA</span>

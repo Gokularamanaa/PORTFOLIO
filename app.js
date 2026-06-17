@@ -3,6 +3,9 @@ let isIntroActive = true;
 let introTimeline;
 let introGroup;
 let introUpdateFn;
+let audioCtx = null;
+let audioGainNode = null;
+let isSoundOn = false;
 
 const introParams = {
   vortexStrength: 0,
@@ -878,6 +881,444 @@ class AntigravityScene {
 }
 
 // ==========================================
+// CINEMATIC BGM AUDIO SYNTHESIZER
+// ==========================================
+
+let activeAudioSources = [];
+
+function stopAllAudioSources(fadeOutDuration = 0.2) {
+  if (audioGainNode && audioCtx) {
+    try {
+      audioGainNode.gain.setValueAtTime(audioGainNode.gain.value, audioCtx.currentTime);
+      audioGainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + fadeOutDuration);
+    } catch (e) {
+      console.warn("Failed to fade out master gain node:", e);
+    }
+  }
+  
+  // Schedule stopping of all active sources
+  const stopTime = audioCtx ? audioCtx.currentTime + fadeOutDuration + 0.05 : 0;
+  activeAudioSources.forEach(source => {
+    try {
+      source.stop(stopTime);
+    } catch (e) {
+      // Source might not have stop, or already stopped
+    }
+  });
+  activeAudioSources = [];
+}
+
+// Helper to play heartbeat (Lub-dub ticking)
+function playHeartbeat(time, volume = 0.5) {
+  if (!audioCtx || !audioGainNode) return;
+  try {
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
+    const gain1 = audioCtx.createGain();
+    const gain2 = audioCtx.createGain();
+    
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(55, time);
+    osc1.frequency.exponentialRampToValueAtTime(25, time + 0.15);
+    
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(55, time + 0.15);
+    osc2.frequency.exponentialRampToValueAtTime(25, time + 0.3);
+    
+    gain1.gain.setValueAtTime(0.001, time);
+    gain1.gain.linearRampToValueAtTime(volume * 0.4, time + 0.02);
+    gain1.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
+    
+    gain2.gain.setValueAtTime(0.001, time + 0.15);
+    gain2.gain.linearRampToValueAtTime(volume * 0.5, time + 0.17);
+    gain2.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
+    
+    osc1.connect(gain1);
+    gain1.connect(audioGainNode);
+    osc2.connect(gain2);
+    gain2.connect(audioGainNode);
+    
+    osc1.start(time);
+    osc1.stop(time + 0.25);
+    osc2.start(time + 0.15);
+    osc2.stop(time + 0.4);
+    
+    activeAudioSources.push(osc1, osc2);
+  } catch (e) {}
+}
+
+// Helper to play deep drone/tension sweep
+function playDrone(startTime) {
+  if (!audioCtx || !audioGainNode) return;
+  try {
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+    
+    osc1.type = 'sawtooth';
+    osc1.frequency.setValueAtTime(45, startTime);
+    osc1.frequency.linearRampToValueAtTime(45, startTime + 1.5);
+    osc1.frequency.exponentialRampToValueAtTime(110, startTime + 3.5);
+    osc1.frequency.exponentialRampToValueAtTime(150, startTime + 4.3);
+    
+    osc2.type = 'sawtooth';
+    osc2.frequency.setValueAtTime(45.5, startTime);
+    osc2.frequency.linearRampToValueAtTime(45.5, startTime + 1.5);
+    osc2.frequency.exponentialRampToValueAtTime(110.8, startTime + 3.5);
+    osc2.frequency.exponentialRampToValueAtTime(151, startTime + 4.3);
+    
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(95, startTime);
+    filter.frequency.linearRampToValueAtTime(95, startTime + 1.5);
+    filter.frequency.exponentialRampToValueAtTime(350, startTime + 3.5);
+    filter.frequency.exponentialRampToValueAtTime(650, startTime + 4.3);
+    filter.Q.setValueAtTime(4.0, startTime);
+    
+    gain.gain.setValueAtTime(0.001, startTime);
+    gain.gain.linearRampToValueAtTime(0.35, startTime + 1.5);
+    gain.gain.linearRampToValueAtTime(0.55, startTime + 3.5);
+    gain.gain.exponentialRampToValueAtTime(0.75, startTime + 4.3);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 4.4); // tension collapse cut-off
+    
+    osc1.connect(filter);
+    osc2.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioGainNode);
+    
+    osc1.start(startTime);
+    osc2.start(startTime);
+    
+    osc1.stop(startTime + 4.45);
+    osc2.stop(startTime + 4.45);
+    
+    activeAudioSources.push(osc1, osc2);
+  } catch (e) {}
+}
+
+// Helper to play white-noise vortex sweep
+function playVortexWhoosh(startTime) {
+  if (!audioCtx || !audioGainNode) return;
+  try {
+    const bufferSize = audioCtx.sampleRate * 4.5;
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+    
+    const noiseNode = audioCtx.createBufferSource();
+    noiseNode.buffer = noiseBuffer;
+    
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.Q.setValueAtTime(4.5, startTime);
+    
+    filter.frequency.setValueAtTime(130, startTime + 1.5);
+    // Orbit sweeps
+    filter.frequency.exponentialRampToValueAtTime(750, startTime + 2.2);
+    filter.frequency.exponentialRampToValueAtTime(260, startTime + 2.7);
+    filter.frequency.exponentialRampToValueAtTime(1500, startTime + 3.3);
+    filter.frequency.exponentialRampToValueAtTime(450, startTime + 3.7);
+    filter.frequency.exponentialRampToValueAtTime(3500, startTime + 4.3);
+    
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.001, startTime);
+    gain.gain.linearRampToValueAtTime(0.001, startTime + 1.5);
+    gain.gain.exponentialRampToValueAtTime(0.35, startTime + 3.0);
+    gain.gain.linearRampToValueAtTime(0.65, startTime + 4.3);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 4.4); // collapse cut-off
+    
+    noiseNode.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioGainNode);
+    
+    noiseNode.start(startTime + 1.5);
+    noiseNode.stop(startTime + 4.45);
+    
+    activeAudioSources.push(noiseNode);
+  } catch (e) {}
+}
+
+// Helper to play explosion boom & crash
+function playExplosion(startTime) {
+  if (!audioCtx || !audioGainNode) return;
+  try {
+    // 1. Sub Bass Drop (The Boom)
+    const subOsc = audioCtx.createOscillator();
+    const subGain = audioCtx.createGain();
+    
+    subOsc.type = 'sine';
+    subOsc.frequency.setValueAtTime(160, startTime);
+    subOsc.frequency.exponentialRampToValueAtTime(28, startTime + 1.8);
+    
+    subGain.gain.setValueAtTime(0.001, startTime);
+    subGain.gain.linearRampToValueAtTime(1.0, startTime + 0.04);
+    subGain.gain.exponentialRampToValueAtTime(0.01, startTime + 2.0);
+    subGain.gain.exponentialRampToValueAtTime(0.001, startTime + 2.5);
+    
+    subOsc.connect(subGain);
+    subGain.connect(audioGainNode);
+    subOsc.start(startTime);
+    subOsc.stop(startTime + 2.6);
+    
+    // 2. High Frequency White Noise Blast (The Crash)
+    const bufferSize = audioCtx.sampleRate * 3.0;
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+    
+    const noiseNode = audioCtx.createBufferSource();
+    noiseNode.buffer = noiseBuffer;
+    
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(7500, startTime);
+    filter.frequency.exponentialRampToValueAtTime(160, startTime + 2.2);
+    
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.001, startTime);
+    gain.gain.linearRampToValueAtTime(0.75, startTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.08, startTime + 1.0);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 3.0);
+    
+    noiseNode.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioGainNode);
+    
+    noiseNode.start(startTime);
+    noiseNode.stop(startTime + 3.1);
+    
+    activeAudioSources.push(subOsc, noiseNode);
+  } catch (e) {}
+}
+
+// Helper to play epic brass synth chords (South Indian Cinematic Style)
+function playBrassChord(freqs, startTime, duration, volume = 0.22) {
+  if (!audioCtx || !audioGainNode) return;
+  try {
+    const filter = audioCtx.createBiquadFilter();
+    const gain = audioCtx.createGain();
+    
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(260, startTime);
+    filter.frequency.exponentialRampToValueAtTime(2100, startTime + 0.06); // brass opening sweep
+    filter.frequency.exponentialRampToValueAtTime(850, startTime + 0.35); // warm sustain
+    filter.frequency.exponentialRampToValueAtTime(140, startTime + duration); // release fade
+    filter.Q.setValueAtTime(5.0, startTime);
+    
+    gain.gain.setValueAtTime(0.001, startTime);
+    gain.gain.linearRampToValueAtTime(volume, startTime + 0.04); // punchy attack
+    gain.gain.exponentialRampToValueAtTime(volume * 0.75, startTime + 0.25);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+    
+    freqs.forEach(freq => {
+      // Detuned sawtooth waves for fatness
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      
+      osc1.type = 'sawtooth';
+      osc1.frequency.setValueAtTime(freq, startTime);
+      
+      osc2.type = 'sawtooth';
+      osc2.frequency.setValueAtTime(freq * 1.004, startTime); // detune
+      
+      osc1.connect(filter);
+      osc2.connect(filter);
+      
+      osc1.start(startTime);
+      osc2.start(startTime);
+      
+      osc1.stop(startTime + duration + 0.1);
+      osc2.stop(startTime + duration + 0.1);
+      
+      activeAudioSources.push(osc1, osc2);
+    });
+    
+    filter.connect(gain);
+    gain.connect(audioGainNode);
+  } catch (e) {}
+}
+
+// Helper to play cinematic drum hits (Taiko/Kick)
+function playEpicDrumHit(startTime, volume = 0.6) {
+  if (!audioCtx || !audioGainNode) return;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(120, startTime);
+    osc.frequency.exponentialRampToValueAtTime(45, startTime + 0.14);
+    
+    gain.gain.setValueAtTime(0.001, startTime);
+    gain.gain.linearRampToValueAtTime(volume, startTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.6);
+    
+    osc.connect(gain);
+    gain.connect(audioGainNode);
+    
+    osc.start(startTime);
+    osc.stop(startTime + 0.7);
+    
+    activeAudioSources.push(osc);
+  } catch (e) {}
+}
+
+// Helper to play short bassline notes
+function playBassNote(freq, startTime, duration = 0.12, volume = 0.15) {
+  if (!audioCtx || !audioGainNode) return;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+    
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, startTime);
+    
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(140, startTime);
+    
+    gain.gain.setValueAtTime(0.001, startTime);
+    gain.gain.linearRampToValueAtTime(volume, startTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+    
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioGainNode);
+    
+    osc.start(startTime);
+    osc.stop(startTime + duration + 0.05);
+    
+    activeAudioSources.push(osc);
+  } catch (e) {}
+}
+
+function playCinematicBGM() {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    // Resume if suspended
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    
+    // Stop and clean up any currently playing sounds
+    stopAllAudioSources(0.1);
+    
+    // Create new master volume controller
+    audioGainNode = audioCtx.createGain();
+    audioGainNode.gain.setValueAtTime(1.0, audioCtx.currentTime);
+    audioGainNode.connect(audioCtx.destination);
+    
+    const now = audioCtx.currentTime;
+    
+    // 1. Play drone starting immediately
+    playDrone(now);
+    
+    // 2. Play white noise vortex sweep starting at 1.5s
+    playVortexWhoosh(now);
+    
+    // 3. Play accelerating heartbeat sequence
+    const heartbeatTimes = [
+      0.2, 1.0, 1.6, 2.2, 2.6, 2.9, 3.2, 3.4, 3.6, 3.8, 4.0, 4.2
+    ];
+    heartbeatTimes.forEach((time, index) => {
+      const vol = 0.2 + (index / heartbeatTimes.length) * 0.65;
+      playHeartbeat(now + time, vol);
+    });
+    
+    // 4. Trigger massive explosion drop at 4.5s
+    playExplosion(now + 4.5);
+    
+    // 5. Play the Epic D-Minor Heroic Brass Theme (Motif) & Drum beats
+    // Motif beats:
+    // Hit 1: 4.5s (D minor: D3, A3, D4, F4)
+    // Hit 2: 5.2s (Bb major: Bb2, F3, Bb3, D4)
+    // Hit 3: 5.9s (C major: C3, G3, C4, E4)
+    // Hit 4: 6.6s (A major: A2, E3, A3, C#4)
+    // Hit 5: 7.3s (D minor: D3, A3, D4, F4 - final long chord)
+    
+    const duration = 0.65;
+    
+    playBrassChord([146.83, 220.00, 293.66, 349.23], now + 4.5, duration, 0.24);
+    playEpicDrumHit(now + 4.5, 0.75);
+    
+    playBrassChord([116.54, 174.61, 233.08, 293.66], now + 5.2, duration, 0.24);
+    playEpicDrumHit(now + 5.2, 0.75);
+    
+    playBrassChord([130.81, 195.99, 261.63, 329.63], now + 5.9, duration, 0.24);
+    playEpicDrumHit(now + 5.9, 0.75);
+    
+    playBrassChord([110.00, 164.81, 220.00, 277.18], now + 6.6, duration, 0.24);
+    playEpicDrumHit(now + 6.6, 0.75);
+    
+    // Final long sustained resolve chord
+    playBrassChord([146.83, 220.00, 293.66, 349.23], now + 7.3, 1.8, 0.28);
+    playEpicDrumHit(now + 7.3, 0.85);
+    
+    // Rhythmic double drum-hits between beats (e.g. 4.85s, 5.0s, etc.)
+    const fillTimes = [
+      4.85, 5.0, 5.55, 5.7, 6.25, 6.4, 6.95, 7.1
+    ];
+    fillTimes.forEach(time => {
+      playEpicDrumHit(now + time, 0.45);
+    });
+    
+    // Pulsing synth bassline
+    // D2 = 73.42, Bb1 = 58.27, C2 = 65.41, A1 = 55.00
+    const bassline = [
+      // 4.5s block (D)
+      { freq: 73.42, time: 4.5 }, { freq: 73.42, time: 4.675 }, { freq: 73.42, time: 4.85 }, { freq: 73.42, time: 5.025 },
+      // 5.2s block (Bb)
+      { freq: 58.27, time: 5.2 }, { freq: 58.27, time: 5.375 }, { freq: 58.27, time: 5.55 }, { freq: 58.27, time: 5.725 },
+      // 5.9s block (C)
+      { freq: 65.41, time: 5.9 }, { freq: 65.41, time: 6.075 }, { freq: 65.41, time: 6.25 }, { freq: 65.41, time: 6.425 },
+      // 6.6s block (A)
+      { freq: 55.00, time: 6.6 }, { freq: 55.00, time: 6.775 }, { freq: 55.00, time: 6.95 }, { freq: 55.00, time: 7.125 },
+      // 7.3s block (Resolve D)
+      { freq: 73.42, time: 7.3 }, { freq: 73.42, time: 7.475 }, { freq: 73.42, time: 7.65 }, { freq: 73.42, time: 7.825 }
+    ];
+    
+    bassline.forEach(note => {
+      const vol = note.time >= 7.3 ? 0.22 : 0.16;
+      playBassNote(note.freq, now + note.time, 0.12, vol);
+    });
+    
+  } catch (err) {
+    console.warn("Web Audio API failed or blocked: ", err);
+  }
+}
+
+function toggleSound(sceneWrapper) {
+  const btn = document.getElementById('audio-toggle-btn');
+  if (!btn) return;
+  
+  if (!isSoundOn) {
+    isSoundOn = true;
+    btn.classList.add('active');
+    btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Sound On';
+    
+    // Restart animation timeline to sync visual drop with BGM drop!
+    if (introTimeline) {
+      introTimeline.restart();
+    }
+    playCinematicBGM();
+  } else {
+    isSoundOn = false;
+    btn.classList.remove('active');
+    btn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i> Sound Off';
+    
+    // Fade out volume gain and stop all sources
+    stopAllAudioSources(0.3);
+  }
+}
+
+// ==========================================
 // CINEMATIC NAME REVEAL INTRO
 // ==========================================
 
@@ -984,6 +1425,9 @@ function startIntro(sceneWrapper) {
 function endIntro(sceneWrapper) {
   if (!isIntroActive) return;
   isIntroActive = false;
+  
+  // Fade out audio on end and stop all sound sources
+  stopAllAudioSources(1.2);
   
   // Hide overlay
   const introOverlay = document.getElementById('intro-overlay');
@@ -1212,6 +1656,14 @@ document.addEventListener("DOMContentLoaded", () => {
   if (skipBtn) {
     skipBtn.addEventListener('click', () => {
       endIntro(antigravity);
+    });
+  }
+
+  // Setup Audio Toggle Button
+  const audioBtn = document.getElementById('audio-toggle-btn');
+  if (audioBtn) {
+    audioBtn.addEventListener('click', () => {
+      toggleSound(antigravity);
     });
   }
 
