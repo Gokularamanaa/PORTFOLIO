@@ -873,6 +873,7 @@ class AntigravityScene {
     this.renderer.dispose();
     if (this.canvas.parentElement) {
       this.canvas.parentElement.removeChild(this.canvas);
+    }
   }
 }
 
