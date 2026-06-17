@@ -20,7 +20,21 @@
   <!-- FontAwesome for Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body class="intro-active">
+  <!-- Cinematic Intro Overlay -->
+  <div class="intro-overlay" id="intro-overlay">
+    <button class="skip-btn" id="skip-intro-btn">Skip Intro <i class="fa-solid fa-angles-right"></i></button>
+    <div class="intro-content">
+      <h1 class="intro-title">
+        <span class="first-name" id="name-gokula">GOKULA</span>
+        <span class="last-name" id="name-ramanaa">RAMANAA</span>
+      </h1>
+      <p class="intro-subtitle" id="intro-subtitle">
+        Full Stack Developer &bull; Software Engineer &bull; Problem Solver
+      </p>
+    </div>
+  </div>
+
   <!-- WebGL Background Canvas -->
   <div id="particle-canvas-container"></div>
   

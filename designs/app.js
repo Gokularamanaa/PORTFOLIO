@@ -7,7 +7,7 @@ const settings = {
   currentDesign: 'vortex', // 'vortex', 'constellation', 'ripple'
   speed: 1.0,
   count: 200,
-  color: '#00f2fe'
+  color: '#F4B43A'
 };
 
 // Three.js Core Variables
@@ -16,6 +16,20 @@ let currentObjects = []; // Stores meshes/points of the active design
 let raycaster, planeZ, mouse, mouse3D;
 let width, height;
 let time = 0;
+
+// Cinematic Intro Variables
+let introTimeline;
+let isIntroActive = true;
+
+const introParams = {
+  vortexStrength: 0,     // 0 = drift, 1 = full vortex
+  collapseProgress: 0,   // 0 = outer swirl, 1 = collapsed to center
+  explosionProgress: 0,  // 0 = collapsed, 1 = exploded
+  ringStrength: 0,       // strength of post-explosion orbital ring
+  ambientDrift: 0.25,    // slow drift factor
+  cameraZ: 25,           // cinematic camera zoom
+  particleSize: 0.35,    // size of particles
+};
 
 // UI Elements
 let interactionTip;
@@ -58,11 +72,339 @@ function init() {
 
   setupUIEventListeners();
   
-  // Load initial design
-  switchDesign(settings.currentDesign);
+  // Setup Skip Button Listener
+  const skipBtn = document.getElementById('skip-intro-btn');
+  if (skipBtn) {
+    skipBtn.addEventListener('click', endIntro);
+  }
+
+  // Load initial design or start intro sequence
+  if (isIntroActive) {
+    startIntro();
+  } else {
+    switchDesign(settings.currentDesign);
+  }
 
   // Start Frame Loop
   animate();
+}
+
+// ============================================================================
+// CINEMATIC NAME REVEAL INTRO
+// ============================================================================
+
+function startIntro() {
+  isIntroActive = true;
+  document.body.classList.add('intro-active');
+  
+  const introData = initIntroDesign();
+  scene.add(introData.group);
+  currentObjects.push({ group: introData.group, updateFn: introData.updateFn });
+  
+  introTimeline = gsap.timeline({
+    onComplete: endIntro
+  });
+  
+  // Set initial state
+  camera.position.z = introParams.cameraZ;
+  
+  // 1. Atmosphere (0s - 1.5s): Quiet drifting particles.
+  
+  // 2. Vortex formation (1.5s - 3.5s): Swirl forms, pulls inward, camera zoom
+  introTimeline.to(introParams, {
+    vortexStrength: 1.2,
+    cameraZ: 18,
+    ambientDrift: 0.05,
+    duration: 2.0,
+    ease: 'power2.inOut'
+  }, 1.5);
+  
+  // 3. Collapse (3.5s - 4.5s): High-speed collapse to a single glowing center core
+  introTimeline.to(introParams, {
+    collapseProgress: 1.0,
+    cameraZ: 14,
+    particleSize: 0.55,
+    duration: 1.0,
+    ease: 'power4.in'
+  }, 3.5);
+  
+  // 4. Explosion (4.5s): Particles explode outward in slow motion
+  introTimeline.to(introParams, {
+    explosionProgress: 1.0,
+    ringStrength: 1.0,
+    particleSize: 0.30,
+    duration: 3.5,
+    ease: 'power3.out'
+  }, 4.5);
+  
+  // Name reveals synced with explosion:
+  const nameGokula = document.getElementById('name-gokula');
+  const nameRamanaa = document.getElementById('name-ramanaa');
+  const introSubtitle = document.getElementById('intro-subtitle');
+  
+  // GOKULA appears at 4.5s (duration 1.5s)
+  introTimeline.to(nameGokula, {
+    opacity: 1,
+    filter: 'blur(0px)',
+    scale: 1,
+    textShadow: '0 0 15px rgba(244, 180, 58, 0.4), 0 0 35px rgba(244, 180, 58, 0.7), 0 0 55px rgba(244, 180, 58, 0.9)',
+    duration: 1.5,
+    ease: 'power3.out'
+  }, 4.5);
+  
+  // RAMANAA appears a fraction of a second later at 4.9s
+  introTimeline.to(nameRamanaa, {
+    opacity: 1,
+    filter: 'blur(0px)',
+    scale: 1,
+    textShadow: '0 0 15px rgba(244, 180, 58, 0.4), 0 0 35px rgba(244, 180, 58, 0.7), 0 0 55px rgba(244, 180, 58, 0.9)',
+    duration: 1.5,
+    ease: 'power3.out'
+  }, 4.9);
+  
+  // Subtitle fades in at 5.8s
+  introTimeline.to(introSubtitle, {
+    opacity: 1,
+    filter: 'blur(0px)',
+    y: 0,
+    duration: 1.2,
+    ease: 'power2.out'
+  }, 5.8);
+  
+  // Camera zooms back out slightly during hold
+  introTimeline.to(introParams, {
+    cameraZ: 17,
+    duration: 1.0,
+    ease: 'power1.inOut'
+  }, 6.0);
+  
+  // Transition to main dashboard experience (7.0s - 8.2s)
+  const introOverlay = document.getElementById('intro-overlay');
+  introTimeline.to(introOverlay, {
+    opacity: 0,
+    duration: 1.2,
+    ease: 'power2.inOut',
+    onComplete: () => {
+      if (introOverlay) {
+        introOverlay.style.display = 'none';
+      }
+    }
+  }, 7.0);
+}
+
+function endIntro() {
+  if (!isIntroActive) return;
+  isIntroActive = false;
+  
+  // Hide overlay
+  const introOverlay = document.getElementById('intro-overlay');
+  if (introOverlay) {
+    introOverlay.style.display = 'none';
+  }
+  
+  // Remove body class to show dashboard and controls
+  document.body.classList.remove('intro-active');
+  
+  // Kill GSAP timeline
+  if (introTimeline) {
+    introTimeline.kill();
+    introTimeline = null;
+  }
+  
+  // Clean up intro canvas objects
+  cleanUpCurrent();
+  
+  // Reset camera to default for design
+  camera.position.z = 20;
+  
+  // Start the regular interactive canvas design (vortex)
+  switchDesign(settings.currentDesign);
+}
+
+function initIntroDesign() {
+  const group = new THREE.Group();
+  
+  const particleCount = 1500;
+  const geometry = new THREE.BufferGeometry();
+  
+  const positions = new Float32Array(particleCount * 3);
+  const colors = new Float32Array(particleCount * 3);
+  
+  const particles = [];
+  const baseColor = new THREE.Color(settings.color);
+  
+  for (let i = 0; i < particleCount; i++) {
+    // galaxy structure setup
+    const theta = Math.random() * Math.PI * 2;
+    // Distribution favoring middle distance, with some far out
+    const baseRadius = Math.random() * 14 + 2;
+    
+    const x = Math.cos(theta) * baseRadius;
+    const y = Math.sin(theta) * baseRadius;
+    const z = (Math.random() - 0.5) * 2.5;
+    
+    positions[i * 3] = x;
+    positions[i * 3 + 1] = y;
+    positions[i * 3 + 2] = z;
+    
+    // Assign particle class types (30% ring, 70% drift)
+    const isRingParticle = i < (particleCount * 0.3);
+    
+    // Explode direction (radial outward with slight Z offset)
+    const explodeAngle = theta + (Math.random() - 0.5) * 0.5;
+    const explodeDir = new THREE.Vector3(
+      Math.cos(explodeAngle),
+      Math.sin(explodeAngle),
+      (Math.random() - 0.5) * 0.4
+    ).normalize();
+    
+    // Drift direction after explosion
+    const driftDir = new THREE.Vector3(
+      (Math.random() - 0.5),
+      (Math.random() - 0.5),
+      (Math.random() - 0.5)
+    ).normalize();
+    
+    // Slight variance in particle color shades
+    const colorVar = baseColor.clone().multiplyScalar(0.75 + Math.random() * 0.35);
+    colors[i * 3] = colorVar.r;
+    colors[i * 3 + 1] = colorVar.g;
+    colors[i * 3 + 2] = colorVar.b;
+    
+    particles.push({
+      angle: theta,
+      baseRadius: baseRadius,
+      baseZ: z,
+      orbitSpeed: 0.015 + Math.random() * 0.02,
+      isRingParticle: isRingParticle,
+      explodeDir: explodeDir,
+      driftDir: driftDir,
+      explodeSpeed: 0.5 + Math.random() * 1.2
+    });
+  }
+  
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  
+  const texture = createCircleTexture(settings.color);
+  const material = new THREE.PointsMaterial({
+    size: 0.35,
+    map: texture,
+    vertexColors: true,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  
+  const points = new THREE.Points(geometry, material);
+  group.add(points);
+  
+  const updateFn = (delta) => {
+    const posAttr = geometry.getAttribute('position');
+    const colorsAttr = geometry.getAttribute('color');
+    
+    const timeScale = settings.speed;
+    
+    for (let i = 0; i < particleCount; i++) {
+      const p = particles[i];
+      
+      // Speed multiplier scales up during vortex phase
+      const speedMultiplier = 1.0 + introParams.vortexStrength * 4.0;
+      p.angle += p.orbitSpeed * delta * 60 * speedMultiplier * timeScale;
+      
+      let x, y, z;
+      
+      if (introParams.explosionProgress === 0) {
+        // Vortex Swirl and Collapse logic
+        // Swirling galaxy/disk coordinates
+        const currentRadius = p.baseRadius * (1.0 - introParams.vortexStrength * 0.35);
+        const orbitX = Math.cos(p.angle) * currentRadius;
+        const orbitY = Math.sin(p.angle) * currentRadius;
+        const orbitZ = p.baseZ + Math.sin(p.angle * 2.0 + time) * 0.3 * introParams.vortexStrength;
+        
+        // Collapse scaling factor pulling towards the center
+        const collapseFactor = 1.0 - introParams.collapseProgress;
+        x = orbitX * collapseFactor;
+        y = orbitY * collapseFactor;
+        z = orbitZ * collapseFactor;
+        
+        // Add subtle atmospheric noise/drift
+        x += Math.sin(p.angle * 3.0 + time) * introParams.ambientDrift * 1.5;
+        y += Math.cos(p.angle * 2.0 + time) * introParams.ambientDrift * 1.5;
+        z += Math.sin(time + i) * introParams.ambientDrift * 0.8;
+      } else {
+        // Explosion and Ring dynamics
+        if (p.isRingParticle) {
+          // Spiral outward to settle into a clean, orbiting XY energy ring around the name
+          const ringRadius = 7.8 + Math.sin(p.angle * 4.0 + time * 3.0) * 0.35;
+          const radius = ringRadius * introParams.explosionProgress;
+          
+          // Orbital rotation speed of the ring
+          const ringAngle = p.angle + time * 0.7 * introParams.ringStrength;
+          
+          x = Math.cos(ringAngle) * radius;
+          y = Math.sin(ringAngle) * radius;
+          z = p.baseZ * 0.15 * (1.0 - introParams.ringStrength); // flatten into XY plane
+          
+          // Soft wave ripple on Z axis
+          z += Math.sin(ringAngle * 3.0 + time * 2.5) * 0.12 * introParams.ringStrength;
+        } else {
+          // Drift particles: explode outward radially, slowing down, and float off screen
+          const dist = p.explodeSpeed * introParams.explosionProgress * 26.0;
+          
+          x = p.explodeDir.x * dist;
+          y = p.explodeDir.y * dist;
+          z = p.explodeDir.z * dist;
+          
+          // Add slow directional float
+          x += p.driftDir.x * (introParams.explosionProgress - 0.1) * 3.5;
+          y += p.driftDir.y * (introParams.explosionProgress - 0.1) * 3.5;
+          z += p.driftDir.z * (introParams.explosionProgress - 0.1) * 1.8;
+        }
+      }
+      
+      posAttr.setXYZ(i, x, y, z);
+      
+      // Glow and Fade particle coloring logic
+      if (introParams.collapseProgress > 0 && introParams.explosionProgress === 0) {
+        // Brighten to white core during collapse
+        const glowFactor = introParams.collapseProgress * 0.85;
+        colorsAttr.setXYZ(i, 
+          baseColor.r * (1.0 - glowFactor) + glowFactor,
+          baseColor.g * (1.0 - glowFactor) + glowFactor,
+          baseColor.b * (1.0 - glowFactor) + glowFactor
+        );
+      } else if (introParams.explosionProgress > 0) {
+        if (!p.isRingParticle) {
+          // Drift particles slowly fade away
+          const fadeFactor = Math.max(0.0, 1.0 - introParams.explosionProgress * 0.92);
+          colorsAttr.setXYZ(i, 
+            baseColor.r * fadeFactor,
+            baseColor.g * fadeFactor,
+            baseColor.b * fadeFactor
+          );
+        } else {
+          // Ring particles pulse with golden light
+          const pulse = 0.85 + Math.sin(p.angle * 4.0 + time * 3.5) * 0.15;
+          colorsAttr.setXYZ(i, 
+            baseColor.r * pulse,
+            baseColor.g * pulse,
+            baseColor.b * pulse
+          );
+        }
+      } else {
+        colorsAttr.setXYZ(i, baseColor.r, baseColor.g, baseColor.b);
+      }
+    }
+    
+    posAttr.needsUpdate = true;
+    colorsAttr.needsUpdate = true;
+    
+    // Animate points material size
+    material.size = introParams.particleSize;
+  };
+  
+  return { group, updateFn };
 }
 
 // ============================================================================
@@ -283,7 +625,7 @@ function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result ? 
     `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : 
-    '0, 242, 254';
+    '244, 180, 58';
 }
 
 function createCircleTexture(colorHex) {

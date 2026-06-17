@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurora Quantum Wave • Cursor Lab</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --bg-color: #030407;
+      --theme-color: #00f2fe;
+      --theme-color-rgb: 0, 242, 254;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --font-main: 'Outfit', sans-serif;
+      --font-mono: 'Space Grotesk', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      font-family: var(--font-main);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Floating Dashboard */
+    .dashboard {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      background: rgba(8, 10, 15, 0.45);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      padding: 24px;
+      border-radius: 16px;
+      width: 340px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: color 0.3s ease;
+    }
+
+    .back-btn:hover {
+      color: var(--theme-color);
+    }
+
+    .back-btn i {
+      transition: transform 0.3s ease;
+    }
+
+    .back-btn:hover i {
+      transform: translateX(-4px);
+    }
+
+    .title-area h2 {
+      font-family: var(--font-mono);
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: #ffffff;
+      margin-top: 4px;
+      text-shadow: 0 0 15px rgba(var(--theme-color-rgb), 0.3);
+    }
+
+    .theme-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      background: rgba(0, 242, 254, 0.12);
+      border: 1px solid rgba(0, 242, 254, 0.25);
+      color: var(--theme-color);
+      padding: 2px 8px;
+      border-radius: 100px;
+      align-self: flex-start;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .description {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+
+    .tip {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      background: rgba(10, 12, 18, 0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 6px 16px;
+      border-radius: 100px;
+      z-index: 5;
+      pointer-events: none;
+      animation: floatUpDown 3s ease-in-out infinite;
+    }
+
+    @keyframes floatUpDown {
+      0%, 100% { transform: translate(-50%, 0); }
+      50% { transform: translate(-50%, -6px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="canvas-container"></div>
+
+  <!-- Dashboard Panel -->
+  <div class="dashboard">
+    <a href="index.html" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> Back to Lab
+    </a>
+    <div class="theme-badge">Nordic Flow Field</div>
+    <div class="title-area">
+      <h2>AURORA WAVE</h2>
+    </div>
+    <p class="description">
+      Sinusoidal particle ribbons drift organically to simulate the Northern Lights. Moving the cursor introduces magnetic wind, deforming wave crests and shifting the colors from deep teal to electric indigo.
+    </p>
+    <div class="footer">
+      <span>Color: Teal & Indigo</span>
+      <span>Three.js WebGL</span>
+    </div>
+  </div>
+
+  <div class="tip">Sway cursor to blow the aurora waves</div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  
+  <script>
+    let scene, camera, renderer;
+    let ribbons = [];
+    const ribbonCount = 5;
+    const pointsPerRibbon = 180;
+    let raycaster, planeZ, mouse, mouse3D;
+    let width, height;
+    let time = 0;
+
+    // Palette: Neon Teal to Indigo Purple
+    const colorsList = ['#00f2fe', '#05c1ff', '#536eff', '#893cff', '#b026ff'];
+
+    function init() {
+      const container = document.getElementById('canvas-container');
+      width = window.innerWidth;
+      height = window.innerHeight;
+
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 100);
+      camera.position.z = 18;
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2(-10, -10);
+      planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+      mouse3D = new THREE.Vector3(0, 0, 0);
+
+      initAuroraRibbons();
+
+      window.addEventListener('resize', onWindowResize);
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('touchmove', onTouchMove, { passive: true });
+
+      animate();
+    }
+
+    function createCircleTexture(colorHex) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+      gradient.addColorStop(0.2, colorHex);
+      gradient.addColorStop(0.6, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 64, 64);
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function initAuroraRibbons() {
+      const spacing = 35 / (pointsPerRibbon - 1);
+      const startX = -17.5;
+
+      for (let r = 0; r < ribbonCount; r++) {
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(pointsPerRibbon * 3);
+        const colors = new Float32Array(pointsPerRibbon * 3);
+        
+        const cVal = new THREE.Color(colorsList[r % colorsList.length]);
+
+        const ribbonPoints = [];
+
+        for (let i = 0; i < pointsPerRibbon; i++) {
+          const x = startX + i * spacing;
+          const y = 0;
+          const z = (r - (ribbonCount - 1) / 2) * 2.2; // depth layers
+
+          positions[i * 3] = x;
+          positions[i * 3 + 1] = y;
+          positions[i * 3 + 2] = z;
+
+          colors[i * 3] = cVal.r;
+          colors[i * 3 + 1] = cVal.g;
+          colors[i * 3 + 2] = cVal.b;
+
+          ribbonPoints.push({
+            baseX: x,
+            baseY: y,
+            baseZ: z,
+            pos: new THREE.Vector3(x, y, z),
+            phase: i * 0.045 + r * 1.5
+          });
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        const texture = createCircleTexture(colorsList[r % colorsList.length]);
+        const material = new THREE.PointsMaterial({
+          size: 0.55,
+          map: texture,
+          vertexColors: true,
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        });
+
+        const points = new THREE.Points(geometry, material);
+        scene.add(points);
+
+        ribbons.push({
+          pointsObj: points,
+          data: ribbonPoints,
+          color: cVal
+        });
+      }
+    }
+
+    function onMouseMove(e) {
+      updateMouseCoords(e.clientX, e.clientY);
+    }
+
+    function onTouchMove(e) {
+      if (e.touches.length > 0) {
+        updateMouseCoords(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }
+
+    function updateMouseCoords(clientX, clientY) {
+      mouse.x = (clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      raycaster.ray.intersectPlane(planeZ, mouse3D);
+    }
+
+    function onWindowResize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    }
+
+    let lastTime = 0;
+    function animate(now) {
+      requestAnimationFrame(animate);
+
+      if (!now) now = performance.now();
+      const delta = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+      time += delta;
+
+      for (let r = 0; r < ribbonCount; r++) {
+        const ribbon = ribbons[r];
+        const posAttr = ribbon.pointsObj.geometry.getAttribute('position');
+
+        for (let i = 0; i < pointsPerRibbon; i++) {
+          const pt = ribbon.data[i];
+
+          // Sinusoidal wave motion base
+          let wave = Math.sin(pt.phase + time * 1.8) * 1.8;
+          wave += Math.cos(pt.phase * 0.5 + time * 0.7) * 0.8;
+
+          // Target coordinates before distortion
+          let tx = pt.baseX;
+          let ty = pt.baseY + wave;
+          let tz = pt.baseZ + Math.sin(pt.phase + time * 1.2) * 0.5;
+
+          // Mouse wind distortion
+          const dx = tx - mouse3D.x;
+          const dy = ty - mouse3D.y;
+          const mDist = Math.sqrt(dx * dx + dy * dy);
+
+          if (mDist < 8.0) {
+            // Blow particles upwards/sideways based on cursor proximity
+            const force = (1.0 - mDist / 8.0) * 2.2;
+            ty += (mouse3D.y - ty) * force * 0.4;
+            tx += (mouse3D.x - tx) * force * 0.15;
+            tz += Math.sin(time * 3 + i) * force * 0.8;
+          }
+
+          // Inertial smoothing
+          pt.pos.x += (tx - pt.pos.x) * 0.1;
+          pt.pos.y += (ty - pt.pos.y) * 0.1;
+          pt.pos.z += (tz - pt.pos.z) * 0.1;
+
+          posAttr.setXYZ(i, pt.pos.x, pt.pos.y, pt.pos.z);
+        }
+
+        posAttr.needsUpdate = true;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>

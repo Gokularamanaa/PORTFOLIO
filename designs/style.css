@@ -7,8 +7,8 @@
   --panel-border: rgba(255, 255, 255, 0.06);
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
-  --theme-color: #00f2fe;
-  --theme-color-rgb: 0, 242, 254;
+  --theme-color: #F4B43A;
+  --theme-color-rgb: 244, 180, 58;
   --font-main: 'Outfit', sans-serif;
   --font-mono: 'Space Grotesk', sans-serif;
   --shadow-glow: 0 0 20px rgba(var(--theme-color-rgb), 0.25);
@@ -480,3 +480,182 @@ body {
     bottom: 24px;
   }
 }
+
+/* ----------------------------------------------------
+   CINEMATIC INTRO OVERLAY
+---------------------------------------------------- */
+.intro-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at center, rgba(5, 6, 8, 0.1) 0%, #050608 100%);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: auto; /* Allows skip button interaction */
+  transition: opacity 1.5s cubic-bezier(0.25, 1, 0.5, 1), visibility 1.5s;
+}
+
+.intro-content {
+  text-align: center;
+  z-index: 102;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+}
+
+.intro-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 5rem;
+  letter-spacing: 0.35em;
+  color: #ffffff;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  justify-content: center;
+}
+
+.intro-title span {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(25px);
+  transform: scale(0.75);
+  text-shadow: 0 0 12px rgba(244, 180, 58, 0),
+               0 0 30px rgba(244, 180, 58, 0),
+               0 0 60px rgba(244, 180, 58, 0);
+  will-change: transform, opacity, filter, text-shadow;
+}
+
+.intro-subtitle {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: 0.4em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-top: 24px;
+  opacity: 0;
+  filter: blur(15px);
+  transform: translateY(20px);
+  will-change: transform, opacity, filter;
+  text-align: center;
+}
+
+/* Skip Button with Glassmorphism */
+.skip-btn {
+  position: absolute;
+  top: 32px;
+  right: 32px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 100px;
+  color: var(--text-secondary);
+  padding: 10px 20px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  z-index: 105;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skip-btn:hover {
+  background: rgba(244, 180, 58, 0.15);
+  border-color: rgba(244, 180, 58, 0.4);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(244, 180, 58, 0.15);
+}
+
+.skip-btn i {
+  transition: transform 0.3s ease;
+}
+
+.skip-btn:hover i {
+  transform: translateX(3px);
+}
+
+/* ----------------------------------------------------
+   PANEL AND INTERACTION TIP CONTROLS IN INTRO STATE
+---------------------------------------------------- */
+body.intro-active .control-panel {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateX(-30px);
+}
+
+body.intro-active .interaction-tip {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translate(-50%, -20px);
+}
+
+/* Add smooth transitions to the existing controls */
+.control-panel {
+  transition: opacity 1.5s cubic-bezier(0.25, 1, 0.5, 1),
+              transform 1.5s cubic-bezier(0.25, 1, 0.5, 1),
+              background 0.3s, border-color 0.3s;
+}
+
+.interaction-tip {
+  transition: opacity 1.5s cubic-bezier(0.25, 1, 0.5, 1),
+              transform 1.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@media (max-width: 768px) {
+  .intro-title {
+    font-size: 3rem;
+    letter-spacing: 0.2em;
+    flex-direction: column;
+    gap: 0.2em;
+  }
+  .intro-subtitle {
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    margin-top: 16px;
+  }
+  .skip-btn {
+    top: 20px;
+    right: 20px;
+    padding: 8px 16px;
+    font-size: 0.7rem;
+  }
+}
+
+/* Standalone Links Hover */
+.standalone-btn {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.standalone-btn:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(var(--theme-color-rgb), 0.25) !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+.standalone-btn i {
+  transition: transform 0.3s ease;
+}
+
+.standalone-btn:hover i {
+  transform: scale(1.15);
+}
+

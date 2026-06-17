@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hyperdrive Space Warp • Cursor Lab</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --bg-color: #020204;
+      --theme-color: #a855f7;
+      --theme-color-rgb: 168, 85, 247;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --font-main: 'Outfit', sans-serif;
+      --font-mono: 'Space Grotesk', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      font-family: var(--font-main);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Floating Dashboard */
+    .dashboard {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      background: rgba(5, 5, 8, 0.45);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      padding: 24px;
+      border-radius: 16px;
+      width: 340px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: color 0.3s ease;
+    }
+
+    .back-btn:hover {
+      color: var(--theme-color);
+    }
+
+    .back-btn i {
+      transition: transform 0.3s ease;
+    }
+
+    .back-btn:hover i {
+      transform: translateX(-4px);
+    }
+
+    .title-area h2 {
+      font-family: var(--font-mono);
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: #ffffff;
+      margin-top: 4px;
+      text-shadow: 0 0 15px rgba(var(--theme-color-rgb), 0.3);
+    }
+
+    .theme-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.25);
+      color: var(--theme-color);
+      padding: 2px 8px;
+      border-radius: 100px;
+      align-self: flex-start;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .description {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+
+    .tip {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      background: rgba(10, 12, 18, 0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 6px 16px;
+      border-radius: 100px;
+      z-index: 5;
+      pointer-events: none;
+      animation: floatUpDown 3s ease-in-out infinite;
+    }
+
+    @keyframes floatUpDown {
+      0%, 100% { transform: translate(-50%, 0); }
+      50% { transform: translate(-50%, -6px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="canvas-container"></div>
+
+  <!-- Dashboard Panel -->
+  <div class="dashboard">
+    <a href="index.html" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> Back to Lab
+    </a>
+    <div class="theme-badge">Hyperspace Physics</div>
+    <div class="title-area">
+      <h2>HYPERDRIVE WARP</h2>
+    </div>
+    <p class="description">
+      Stars radiate outwards in a three-dimensional depth field. Moving the cursor rotates the viewport trajectory. Holding a click triggers hyperdrive warp speed, stretching stars into violet light trails.
+    </p>
+    <div class="footer">
+      <span>Color: White & Violet</span>
+      <span>Three.js WebGL</span>
+    </div>
+  </div>
+
+  <div class="tip">Click and hold anywhere to engage Hyperdrive</div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  
+  <script>
+    let scene, camera, renderer;
+    let starLines;
+    const starCount = 1000;
+    let raycaster, planeZ, mouse, mouse3D;
+    let width, height;
+    
+    // Hyperdrive states
+    let hyperParams = {
+      speed: 0.25,        // Current flying speed
+      warpProgress: 0.0,  // 0 = dots, 1 = long stretched line segments
+      targetSpeed: 0.25
+    };
+    
+    let stars = [];
+    const maxDepth = 60;
+    
+    const baseColor = new THREE.Color('#ffffff');
+    const warpColor = new THREE.Color('#b026ff');
+
+    function init() {
+      const container = document.getElementById('canvas-container');
+      width = window.innerWidth;
+      height = window.innerHeight;
+
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(60, width / height, 0.1, maxDepth + 10);
+      camera.position.z = 0; // cockpit centered
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2(0, 0);
+      planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+      mouse3D = new THREE.Vector3(0, 0, 0);
+
+      initStarfield();
+
+      // Event listeners
+      window.addEventListener('resize', onWindowResize);
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('touchmove', onTouchMove, { passive: true });
+      window.addEventListener('mousedown', engageWarp);
+      window.addEventListener('mouseup', disengageWarp);
+      window.addEventListener('touchstart', engageWarp);
+      window.addEventListener('touchend', disengageWarp);
+
+      animate();
+    }
+
+    function initStarfield() {
+      const geometry = new THREE.BufferGeometry();
+      
+      // We will render star paths as lines (2 vertices per star for motion blur stretch)
+      const positions = new Float32Array(starCount * 2 * 3);
+      const colors = new Float32Array(starCount * 2 * 3);
+
+      for (let i = 0; i < starCount; i++) {
+        // Distribute in a cylinder along Z-axis
+        const theta = Math.random() * Math.PI * 2;
+        const radius = Math.random() * 25 + 1.5;
+        
+        const x = Math.cos(theta) * radius;
+        const y = Math.sin(theta) * radius;
+        // Distribute along depth Z between 0 and far plane depth
+        const z = Math.random() * -maxDepth;
+
+        stars.push({
+          x: x,
+          y: y,
+          z: z,
+          speedOffset: 0.75 + Math.random() * 0.5
+        });
+
+        // Vertex 1: Front point
+        positions[i * 6] = x;
+        positions[i * 6 + 1] = y;
+        positions[i * 6 + 2] = z;
+
+        // Vertex 2: Tail point (same at start)
+        positions[i * 6 + 3] = x;
+        positions[i * 6 + 4] = y;
+        positions[i * 6 + 5] = z;
+
+        // Colors
+        colors[i * 6] = 1.0;
+        colors[i * 6 + 1] = 1.0;
+        colors[i * 6 + 2] = 1.0;
+
+        colors[i * 6 + 3] = 1.0;
+        colors[i * 6 + 4] = 1.0;
+        colors[i * 6 + 5] = 1.0;
+      }
+
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      const material = new THREE.LineBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        linewidth: 2,
+        opacity: 0.95
+      });
+
+      starLines = new THREE.LineSegments(geometry, material);
+      scene.add(starLines);
+    }
+
+    function engageWarp() {
+      gsap.to(hyperParams, {
+        speed: 3.5,
+        warpProgress: 1.0,
+        duration: 1.5,
+        ease: 'power3.in'
+      });
+      // Slide camera FOV slightly to warp perspective
+      gsap.to(camera, {
+        fov: 75,
+        duration: 1.5,
+        ease: 'power2.out',
+        onUpdate: () => camera.updateProjectionMatrix()
+      });
+    }
+
+    function disengageWarp() {
+      gsap.to(hyperParams, {
+        speed: 0.25,
+        warpProgress: 0.0,
+        duration: 1.0,
+        ease: 'power2.out'
+      });
+      gsap.to(camera, {
+        fov: 60,
+        duration: 1.0,
+        ease: 'power2.out',
+        onUpdate: () => camera.updateProjectionMatrix()
+      });
+    }
+
+    function onMouseMove(e) {
+      updateMouseCoords(e.clientX, e.clientY);
+    }
+
+    function onTouchMove(e) {
+      if (e.touches.length > 0) {
+        updateMouseCoords(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }
+
+    function updateMouseCoords(clientX, clientY) {
+      // Scale mouse coordinates to [-0.6, 0.6] range
+      mouse.x = (clientX / window.innerWidth) * 1.2 - 0.6;
+      mouse.y = -(clientY / window.innerHeight) * 1.2 + 0.6;
+    }
+
+    function onWindowResize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    }
+
+    let lastTime = 0;
+    function animate(now) {
+      requestAnimationFrame(animate);
+
+      if (!now) now = performance.now();
+      const delta = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      // Smooth camera looking angles based on mouse pointer coordinates
+      const targetCamX = mouse.x * 4.5;
+      const targetCamY = mouse.y * 3.0;
+      camera.position.x += (targetCamX - camera.position.x) * 0.08;
+      camera.position.y += (targetCamY - camera.position.y) * 0.08;
+      camera.lookAt(camera.position.x * 0.5, camera.position.y * 0.5, -maxDepth);
+
+      const posAttr = starLines.geometry.getAttribute('position');
+      const colorAttr = starLines.geometry.getAttribute('color');
+
+      for (let i = 0; i < starCount; i++) {
+        const s = stars[i];
+
+        // Advance star coordinate towards camera (Z direction)
+        const currentSpeed = hyperParams.speed * s.speedOffset * delta * 60;
+        s.z += currentSpeed;
+
+        // Wrap stars back to far distance if passing camera
+        if (s.z > 0) {
+          s.z = -maxDepth;
+          // Randomize positioning to prevent repeating clusters
+          const theta = Math.random() * Math.PI * 2;
+          const radius = Math.random() * 25 + 1.5;
+          s.x = Math.cos(theta) * radius;
+          s.y = Math.sin(theta) * radius;
+        }
+
+        // Draw star stretching based on warp speed
+        // If warpProgress = 0, tail is at same Z. If warpProgress = 1, tail stretches behind Z
+        const tailOffset = currentSpeed * 2.8 * hyperParams.warpProgress + 0.08;
+        const tailZ = s.z - tailOffset;
+
+        // Head node
+        posAttr.setXYZ(i * 2, s.x, s.y, s.z);
+        // Tail node
+        posAttr.setXYZ(i * 2 + 1, s.x, s.y, tailZ);
+
+        // Transition star colors from white to deep violet/purple based on warp progress
+        const starColor = baseColor.clone().lerp(warpColor, hyperParams.warpProgress);
+        
+        // Fades alpha/brightness based on distance
+        let brightness = 1.0;
+        if (s.z > -10.0) {
+          // fade out as they get extremely close to cockpit viewport boundaries
+          brightness = Math.max(0.0, 1.0 - (s.z / 0.0)); 
+        } else if (s.z < -(maxDepth - 10.0)) {
+          // fade in at distance
+          brightness = Math.max(0.0, (s.z + maxDepth) / 10.0);
+        }
+
+        const headCol = starColor.clone().multiplyScalar(brightness);
+        const tailCol = starColor.clone().multiplyScalar(brightness * 0.2); // tail is softer
+
+        colorAttr.setXYZ(i * 2, headCol.r, headCol.g, headCol.b);
+        colorAttr.setXYZ(i * 2 + 1, tailCol.r, tailCol.g, tailCol.b);
+      }
+
+      posAttr.needsUpdate = true;
+      colorAttr.needsUpdate = true;
+
+      renderer.render(scene, camera);
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>

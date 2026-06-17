@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyberpunk Neon Grid • Cursor Lab</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --bg-color: #050308;
+      --theme-color: #ff007f;
+      --theme-color-rgb: 255, 0, 127;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --font-main: 'Outfit', sans-serif;
+      --font-mono: 'Space Grotesk', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      font-family: var(--font-main);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Floating Dashboard */
+    .dashboard {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      background: rgba(8, 6, 12, 0.45);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      padding: 24px;
+      border-radius: 16px;
+      width: 340px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: color 0.3s ease;
+    }
+
+    .back-btn:hover {
+      color: var(--theme-color);
+    }
+
+    .back-btn i {
+      transition: transform 0.3s ease;
+    }
+
+    .back-btn:hover i {
+      transform: translateX(-4px);
+    }
+
+    .title-area h2 {
+      font-family: var(--font-mono);
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: #ffffff;
+      margin-top: 4px;
+      text-shadow: 0 0 15px rgba(var(--theme-color-rgb), 0.35);
+    }
+
+    .theme-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      background: rgba(255, 0, 127, 0.12);
+      border: 1px solid rgba(255, 0, 127, 0.25);
+      color: var(--theme-color);
+      padding: 2px 8px;
+      border-radius: 100px;
+      align-self: flex-start;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .description {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+
+    .tip {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      background: rgba(10, 12, 18, 0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 6px 16px;
+      border-radius: 100px;
+      z-index: 5;
+      pointer-events: none;
+      animation: floatUpDown 3s ease-in-out infinite;
+    }
+
+    @keyframes floatUpDown {
+      0%, 100% { transform: translate(-50%, 0); }
+      50% { transform: translate(-50%, -6px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="canvas-container"></div>
+
+  <!-- Dashboard Panel -->
+  <div class="dashboard">
+    <a href="index.html" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> Back to Lab
+    </a>
+    <div class="theme-badge">Retro Synthwave</div>
+    <div class="title-area">
+      <h2>CYBER GRID</h2>
+    </div>
+    <p class="description">
+      A 3D perspective wireframe mesh plane that functions as a elastic spring membrane. The cursor pushes the mesh downwards, distorting the grid lines, which transition dynamically from cool cyan to cyber pink.
+    </p>
+    <div class="footer">
+      <span>Color: Hot Pink & Cyan</span>
+      <span>Three.js WebGL</span>
+    </div>
+  </div>
+
+  <div class="tip">Hover cursor to indent the cybergrid</div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  
+  <script>
+    let scene, camera, renderer;
+    let gridGroup;
+    let gridNodes = [];
+    const cols = 28, rows = 18;
+    let raycaster, planeZ, mouse, mouse3D;
+    let width, height;
+
+    const pinkColor = new THREE.Color('#ff007f');
+    const cyanColor = new THREE.Color('#00f2fe');
+
+    function init() {
+      const container = document.getElementById('canvas-container');
+      width = window.innerWidth;
+      height = window.innerHeight;
+
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 100);
+      
+      // Cyber angle perspective
+      camera.position.set(0, -11, 12);
+      camera.lookAt(0, 2, 0);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2(-10, -10);
+      
+      // Let's project cursor to Z = 0 plane
+      planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+      mouse3D = new THREE.Vector3(0, 0, 0);
+
+      initCyberGrid();
+
+      window.addEventListener('resize', onWindowResize);
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('touchmove', onTouchMove, { passive: true });
+
+      animate();
+    }
+
+    function initCyberGrid() {
+      gridGroup = new THREE.Group();
+
+      const spacingX = 36 / (cols - 1);
+      const spacingY = 22 / (rows - 1);
+      const startX = -18;
+      const startY = -9;
+
+      // Create Nodes
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const hx = startX + c * spacingX;
+          const hy = startY + r * spacingY;
+          const hz = 0;
+
+          gridNodes.push({
+            home: new THREE.Vector3(hx, hy, hz),
+            pos: new THREE.Vector3(hx, hy, hz),
+            vel: new THREE.Vector3(0, 0, 0)
+          });
+        }
+      }
+
+      // We will render lines connecting nodes
+      const lineCount = (cols - 1) * rows + cols * (rows - 1);
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(lineCount * 2 * 3);
+      const colors = new Float32Array(lineCount * 2 * 3);
+
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      const material = new THREE.LineBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        linewidth: 1.5,
+        opacity: 0.85
+      });
+
+      const gridLines = new THREE.LineSegments(geometry, material);
+      gridGroup.add(gridLines);
+      scene.add(gridGroup);
+    }
+
+    function onMouseMove(e) {
+      updateMouseCoords(e.clientX, e.clientY);
+    }
+
+    function onTouchMove(e) {
+      if (e.touches.length > 0) {
+        updateMouseCoords(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }
+
+    function updateMouseCoords(clientX, clientY) {
+      mouse.x = (clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      raycaster.ray.intersectPlane(planeZ, mouse3D);
+    }
+
+    function onWindowResize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    }
+
+    let lastTime = 0;
+    function animate(now) {
+      requestAnimationFrame(animate);
+
+      if (!now) now = performance.now();
+      const delta = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      // Spring physics parameters
+      const kSpring = 0.08;
+      const damping = 0.85;
+      const hoverRadius = 5.0;
+      const repelStrength = 0.22;
+
+      // 1. Update node physics
+      for (let i = 0; i < gridNodes.length; i++) {
+        const n = gridNodes[i];
+
+        // 2D distance on XY plane to mouse attractor
+        const dx = n.pos.x - mouse3D.x;
+        const dy = n.pos.y - mouse3D.y;
+        const dist2D = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist2D < hoverRadius) {
+          const force = (1.0 - dist2D / hoverRadius) * repelStrength;
+          
+          // Push downwards (Z negative)
+          n.vel.z -= force * 1.5;
+          // Push slightly outward on XY
+          const angle = Math.atan2(dy, dx);
+          n.vel.x += Math.cos(angle) * force * 0.4;
+          n.vel.y += Math.sin(angle) * force * 0.4;
+        }
+
+        // Spring acceleration pulling back to home
+        const ax = -kSpring * (n.pos.x - n.home.x);
+        const ay = -kSpring * (n.pos.y - n.home.y);
+        const az = -kSpring * (n.pos.z - n.home.z);
+
+        n.vel.x += ax;
+        n.vel.y += ay;
+        n.vel.z += az;
+
+        n.vel.multiplyScalar(damping);
+
+        // Update positions
+        n.pos.x += n.vel.x * delta * 60;
+        n.pos.y += n.vel.y * delta * 60;
+        n.pos.z += n.vel.z * delta * 60;
+      }
+
+      // 2. Rebuild wireframe buffer attributes
+      const lineSegments = gridGroup.children[0];
+      const posAttr = lineSegments.geometry.getAttribute('position');
+      const colorAttr = lineSegments.geometry.getAttribute('color');
+
+      let idx = 0;
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const currIdx = r * cols + c;
+          const nCurr = gridNodes[currIdx];
+
+          // Connection horizontal: (c) -> (c+1)
+          if (c < cols - 1) {
+            const rightIdx = currIdx + 1;
+            const nRight = gridNodes[rightIdx];
+
+            posAttr.setXYZ(idx * 2, nCurr.pos.x, nCurr.pos.y, nCurr.pos.z);
+            posAttr.setXYZ(idx * 2 + 1, nRight.pos.x, nRight.pos.y, nRight.pos.z);
+
+            // Shifting color from cyan (base) to pink (deformed)
+            const maxDeform = Math.max(Math.abs(nCurr.pos.z), Math.abs(nRight.pos.z)) / 2.5;
+            const blendFactor = Math.min(maxDeform, 1.0);
+            
+            const lineCol = cyanColor.clone().lerp(pinkColor, blendFactor);
+            colorAttr.setXYZ(idx * 2, lineCol.r, lineCol.g, lineCol.b);
+            colorAttr.setXYZ(idx * 2 + 1, lineCol.r, lineCol.g, lineCol.b);
+
+            idx++;
+          }
+
+          // Connection vertical: (r) -> (r+1)
+          if (r < rows - 1) {
+            const bottomIdx = currIdx + cols;
+            const nBottom = gridNodes[bottomIdx];
+
+            posAttr.setXYZ(idx * 2, nCurr.pos.x, nCurr.pos.y, nCurr.pos.z);
+            posAttr.setXYZ(idx * 2 + 1, nBottom.pos.x, nBottom.pos.y, nBottom.pos.z);
+
+            const maxDeform = Math.max(Math.abs(nCurr.pos.z), Math.abs(nBottom.pos.z)) / 2.5;
+            const blendFactor = Math.min(maxDeform, 1.0);
+
+            const lineCol = cyanColor.clone().lerp(pinkColor, blendFactor);
+            colorAttr.setXYZ(idx * 2, lineCol.r, lineCol.g, lineCol.b);
+            colorAttr.setXYZ(idx * 2 + 1, lineCol.r, lineCol.g, lineCol.b);
+
+            idx++;
+          }
+        }
+      }
+
+      posAttr.needsUpdate = true;
+      colorAttr.needsUpdate = true;
+
+      renderer.render(scene, camera);
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>

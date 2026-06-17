@@ -1,3 +1,19 @@
+// Cinematic Intro Variables
+let isIntroActive = true;
+let introTimeline;
+let introGroup;
+let introUpdateFn;
+
+const introParams = {
+  vortexStrength: 0,
+  collapseProgress: 0,
+  explosionProgress: 0,
+  ringStrength: 0,
+  ambientDrift: 0.25,
+  cameraZ: 25,
+  particleSize: 0.35,
+};
+
 // ==========================================
 // 1. Simplex Noise GLSL Chunk
 // ==========================================
@@ -771,6 +787,7 @@ class AntigravityScene {
   }
 
   initParticles() {
+    if (isIntroActive) return;
     this.particles = new AntigravityParticles(this);
   }
 
@@ -787,6 +804,13 @@ class AntigravityScene {
   preRender() {
     this.dt = this.clock.getDelta();
     this.time += this.dt;
+    
+    if (isIntroActive) {
+      if (typeof introUpdateFn === 'function') {
+        introUpdateFn(this.dt);
+      }
+      return;
+    }
     
     if (this.particles) this.particles.update();
     
@@ -832,6 +856,7 @@ class AntigravityScene {
   }
 
   postRender() {
+    if (isIntroActive) return;
     if (this.particles) this.particles.postRender();
   }
 
@@ -848,8 +873,321 @@ class AntigravityScene {
     this.renderer.dispose();
     if (this.canvas.parentElement) {
       this.canvas.parentElement.removeChild(this.canvas);
-    }
   }
+}
+
+// ==========================================
+// CINEMATIC NAME REVEAL INTRO
+// ==========================================
+
+function startIntro(sceneWrapper) {
+  isIntroActive = true;
+  document.body.classList.add('intro-active');
+  
+  const introData = initIntroDesign(sceneWrapper);
+  sceneWrapper.scene.add(introData.group);
+  introGroup = introData.group;
+  introUpdateFn = introData.updateFn;
+  
+  introTimeline = gsap.timeline({
+    onComplete: () => endIntro(sceneWrapper)
+  });
+  
+  // Set initial state
+  sceneWrapper.camera.position.z = introParams.cameraZ;
+  
+  // 1. Atmosphere (0s - 1.5s): Quiet drifting particles.
+  
+  // 2. Vortex formation (1.5s - 3.5s): Swirl forms, pulls inward, camera zoom
+  introTimeline.to(introParams, {
+    vortexStrength: 1.2,
+    cameraZ: 18,
+    ambientDrift: 0.05,
+    duration: 2.0,
+    ease: 'power2.inOut'
+  }, 1.5);
+  
+  // 3. Collapse (3.5s - 4.5s): High-speed collapse to a single glowing center core
+  introTimeline.to(introParams, {
+    collapseProgress: 1.0,
+    cameraZ: 14,
+    particleSize: 0.55,
+    duration: 1.0,
+    ease: 'power4.in'
+  }, 3.5);
+  
+  // 4. Explosion (4.5s): Particles explode outward in slow motion
+  introTimeline.to(introParams, {
+    explosionProgress: 1.0,
+    ringStrength: 1.0,
+    particleSize: 0.30,
+    duration: 3.5,
+    ease: 'power3.out'
+  }, 4.5);
+  
+  // Name reveals synced with explosion:
+  const nameGokula = document.getElementById('name-gokula');
+  const nameRamanaa = document.getElementById('name-ramanaa');
+  const introSubtitle = document.getElementById('intro-subtitle');
+  
+  // GOKULA appears at 4.5s (duration 1.5s)
+  introTimeline.to(nameGokula, {
+    opacity: 1,
+    filter: 'blur(0px)',
+    scale: 1,
+    textShadow: '0 0 15px rgba(244, 180, 58, 0.4), 0 0 35px rgba(244, 180, 58, 0.7), 0 0 55px rgba(244, 180, 58, 0.9)',
+    duration: 1.5,
+    ease: 'power3.out'
+  }, 4.5);
+  
+  // RAMANAA appears a fraction of a second later at 4.9s
+  introTimeline.to(nameRamanaa, {
+    opacity: 1,
+    filter: 'blur(0px)',
+    scale: 1,
+    textShadow: '0 0 15px rgba(244, 180, 58, 0.4), 0 0 35px rgba(244, 180, 58, 0.7), 0 0 55px rgba(244, 180, 58, 0.9)',
+    duration: 1.5,
+    ease: 'power3.out'
+  }, 4.9);
+  
+  // Subtitle fades in at 5.8s
+  introTimeline.to(introSubtitle, {
+    opacity: 1,
+    filter: 'blur(0px)',
+    y: 0,
+    duration: 1.2,
+    ease: 'power2.out'
+  }, 5.8);
+  
+  // Camera zooms back out slightly during hold
+  introTimeline.to(introParams, {
+    cameraZ: 17,
+    duration: 1.0,
+    ease: 'power1.inOut'
+  }, 6.0);
+  
+  // Transition to main dashboard experience (7.0s - 8.2s)
+  const introOverlay = document.getElementById('intro-overlay');
+  introTimeline.to(introOverlay, {
+    opacity: 0,
+    duration: 1.2,
+    ease: 'power2.inOut',
+    onComplete: () => {
+      if (introOverlay) {
+        introOverlay.style.display = 'none';
+      }
+    }
+  }, 7.0);
+}
+
+function endIntro(sceneWrapper) {
+  if (!isIntroActive) return;
+  isIntroActive = false;
+  
+  // Hide overlay
+  const introOverlay = document.getElementById('intro-overlay');
+  if (introOverlay) {
+    introOverlay.style.display = 'none';
+  }
+  
+  // Remove body class to show portfolio content and navigation
+  document.body.classList.remove('intro-active');
+  
+  // Kill GSAP timeline
+  if (introTimeline) {
+    introTimeline.kill();
+    introTimeline = null;
+  }
+  
+  // Clean up intro canvas objects
+  if (introGroup) {
+    sceneWrapper.scene.remove(introGroup);
+    introGroup.traverse(child => {
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) child.material.dispose();
+    });
+    introGroup = null;
+  }
+  introUpdateFn = null;
+  
+  // Reset camera to default for portfolio
+  sceneWrapper.camera.position.set(0, 0, 3.1);
+  sceneWrapper.camera.lookAt(0, 0, 0);
+  
+  // Instantiate FBO particles
+  sceneWrapper.initParticles();
+}
+
+function initIntroDesign(sceneWrapper) {
+  const group = new THREE.Group();
+  
+  const particleCount = 1500;
+  const geometry = new THREE.BufferGeometry();
+  
+  const positions = new Float32Array(particleCount * 3);
+  const colors = new Float32Array(particleCount * 3);
+  
+  const particles = [];
+  const baseColor = new THREE.Color('#F4B43A'); // matches the golden accent style
+  
+  for (let i = 0; i < particleCount; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const baseRadius = Math.random() * 14 + 2;
+    
+    const x = Math.cos(theta) * baseRadius;
+    const y = Math.sin(theta) * baseRadius;
+    const z = (Math.random() - 0.5) * 2.5;
+    
+    positions[i * 3] = x;
+    positions[i * 3 + 1] = y;
+    positions[i * 3 + 2] = z;
+    
+    const isRingParticle = i < (particleCount * 0.3);
+    
+    const explodeAngle = theta + (Math.random() - 0.5) * 0.5;
+    const explodeDir = new THREE.Vector3(
+      Math.cos(explodeAngle),
+      Math.sin(explodeAngle),
+      (Math.random() - 0.5) * 0.4
+    ).normalize();
+    
+    const driftDir = new THREE.Vector3(
+      (Math.random() - 0.5),
+      (Math.random() - 0.5),
+      (Math.random() - 0.5)
+    ).normalize();
+    
+    const colorVar = baseColor.clone().multiplyScalar(0.75 + Math.random() * 0.35);
+    colors[i * 3] = colorVar.r;
+    colors[i * 3 + 1] = colorVar.g;
+    colors[i * 3 + 2] = colorVar.b;
+    
+    particles.push({
+      angle: theta,
+      baseRadius: baseRadius,
+      baseZ: z,
+      orbitSpeed: 0.015 + Math.random() * 0.02,
+      isRingParticle: isRingParticle,
+      explodeDir: explodeDir,
+      driftDir: driftDir,
+      explodeSpeed: 0.5 + Math.random() * 1.2
+    });
+  }
+  
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  
+  // Custom texture generation
+  const canvasTex = document.createElement('canvas');
+  canvasTex.width = 64;
+  canvasTex.height = 64;
+  const ctx = canvasTex.getContext('2d');
+  const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+  gradient.addColorStop(0.25, '#F4B43A');
+  gradient.addColorStop(0.55, 'rgba(244, 180, 58, 0.25)');
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 64, 64);
+  const texture = new THREE.CanvasTexture(canvasTex);
+  
+  const material = new THREE.PointsMaterial({
+    size: 0.35,
+    map: texture,
+    vertexColors: true,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  
+  const points = new THREE.Points(geometry, material);
+  group.add(points);
+  
+  const updateFn = (delta) => {
+    const posAttr = geometry.getAttribute('position');
+    const colorsAttr = geometry.getAttribute('color');
+    
+    for (let i = 0; i < particleCount; i++) {
+      const p = particles[i];
+      
+      const speedMultiplier = 1.0 + introParams.vortexStrength * 4.0;
+      p.angle += p.orbitSpeed * delta * 60 * speedMultiplier;
+      
+      let x, y, z;
+      
+      if (introParams.explosionProgress === 0) {
+        const currentRadius = p.baseRadius * (1.0 - introParams.vortexStrength * 0.35);
+        const orbitX = Math.cos(p.angle) * currentRadius;
+        const orbitY = Math.sin(p.angle) * currentRadius;
+        const orbitZ = p.baseZ + Math.sin(p.angle * 2.0 + sceneWrapper.time) * 0.3 * introParams.vortexStrength;
+        
+        const collapseFactor = 1.0 - introParams.collapseProgress;
+        x = orbitX * collapseFactor;
+        y = orbitY * collapseFactor;
+        z = orbitZ * collapseFactor;
+        
+        x += Math.sin(p.angle * 3.0 + sceneWrapper.time) * introParams.ambientDrift * 1.5;
+        y += Math.cos(p.angle * 2.0 + sceneWrapper.time) * introParams.ambientDrift * 1.5;
+        z += Math.sin(sceneWrapper.time + i) * introParams.ambientDrift * 0.8;
+      } else {
+        if (p.isRingParticle) {
+          const ringRadius = 7.8 + Math.sin(p.angle * 4.0 + sceneWrapper.time * 3.0) * 0.35;
+          const radius = ringRadius * introParams.explosionProgress;
+          const ringAngle = p.angle + sceneWrapper.time * 0.7 * introParams.ringStrength;
+          
+          x = Math.cos(ringAngle) * radius;
+          y = Math.sin(ringAngle) * radius;
+          z = p.baseZ * 0.15 * (1.0 - introParams.ringStrength);
+          
+          z += Math.sin(ringAngle * 3.0 + sceneWrapper.time * 2.5) * 0.12 * introParams.ringStrength;
+        } else {
+          const dist = p.explodeSpeed * introParams.explosionProgress * 26.0;
+          x = p.explodeDir.x * dist;
+          y = p.explodeDir.y * dist;
+          z = p.explodeDir.z * dist;
+          
+          x += p.driftDir.x * (introParams.explosionProgress - 0.1) * 3.5;
+          y += p.driftDir.y * (introParams.explosionProgress - 0.1) * 3.5;
+          z += p.driftDir.z * (introParams.explosionProgress - 0.1) * 1.8;
+        }
+      }
+      
+      posAttr.setXYZ(i, x, y, z);
+      
+      if (introParams.collapseProgress > 0 && introParams.explosionProgress === 0) {
+        const glowFactor = introParams.collapseProgress * 0.85;
+        colorsAttr.setXYZ(i, 
+          baseColor.r * (1.0 - glowFactor) + glowFactor,
+          baseColor.g * (1.0 - glowFactor) + glowFactor,
+          baseColor.b * (1.0 - glowFactor) + glowFactor
+        );
+      } else if (introParams.explosionProgress > 0) {
+        if (!p.isRingParticle) {
+          const fadeFactor = Math.max(0.0, 1.0 - introParams.explosionProgress * 0.92);
+          colorsAttr.setXYZ(i, 
+            baseColor.r * fadeFactor,
+            baseColor.g * fadeFactor,
+            baseColor.b * fadeFactor
+          );
+        } else {
+          const pulse = 0.85 + Math.sin(p.angle * 4.0 + sceneWrapper.time * 3.5) * 0.15;
+          colorsAttr.setXYZ(i, 
+            baseColor.r * pulse,
+            baseColor.g * pulse,
+            baseColor.b * pulse
+          );
+        }
+      } else {
+        colorsAttr.setXYZ(i, baseColor.r, baseColor.g, baseColor.b);
+      }
+    }
+    
+    posAttr.needsUpdate = true;
+    colorsAttr.needsUpdate = true;
+    material.size = introParams.particleSize;
+  };
+  
+  return { group, updateFn };
 }
 
 // ==========================================
@@ -867,6 +1205,21 @@ document.addEventListener("DOMContentLoaded", () => {
     ringWidth2: 0.107,
     ringDisplacement: 0.53
   });
+
+  // Setup Skip Button
+  const skipBtn = document.getElementById('skip-intro-btn');
+  if (skipBtn) {
+    skipBtn.addEventListener('click', () => {
+      endIntro(antigravity);
+    });
+  }
+
+  // Load initial design or start intro sequence
+  if (isIntroActive) {
+    startIntro(antigravity);
+  } else {
+    antigravity.initParticles();
+  }
 
   // Render loop
   function tick() {

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liquid Chrome Blob • Cursor Lab</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --bg-color: #06070a;
+      --theme-color: #e2e8f0;
+      --theme-color-rgb: 226, 232, 240;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --font-main: 'Outfit', sans-serif;
+      --font-mono: 'Space Grotesk', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      font-family: var(--font-main);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Floating Dashboard */
+    .dashboard {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      background: rgba(8, 9, 13, 0.45);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      padding: 24px;
+      border-radius: 16px;
+      width: 340px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: color 0.3s ease;
+    }
+
+    .back-btn:hover {
+      color: var(--theme-color);
+    }
+
+    .back-btn i {
+      transition: transform 0.3s ease;
+    }
+
+    .back-btn:hover i {
+      transform: translateX(-4px);
+    }
+
+    .title-area h2 {
+      font-family: var(--font-mono);
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: #ffffff;
+      margin-top: 4px;
+      text-shadow: 0 0 15px rgba(var(--theme-color-rgb), 0.25);
+    }
+
+    .theme-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--theme-color);
+      padding: 2px 8px;
+      border-radius: 100px;
+      align-self: flex-start;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .description {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+
+    .tip {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      background: rgba(10, 12, 18, 0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 6px 16px;
+      border-radius: 100px;
+      z-index: 5;
+      pointer-events: none;
+      animation: floatUpDown 3s ease-in-out infinite;
+    }
+
+    @keyframes floatUpDown {
+      0%, 100% { transform: translate(-50%, 0); }
+      50% { transform: translate(-50%, -6px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="canvas-container"></div>
+
+  <!-- Dashboard Panel -->
+  <div class="dashboard">
+    <a href="index.html" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> Back to Lab
+    </a>
+    <div class="theme-badge">Liquid Mechanics</div>
+    <div class="title-area">
+      <h2>LIQUID CHROME</h2>
+    </div>
+    <p class="description">
+      An organic 3D mesh that behaves like floating mercury. Dynamic vertex displacement shaders distort the sphere based on noise and cursor position, reflecting a simulated ambient chrome map.
+    </p>
+    <div class="footer">
+      <span>Color: Metallic Chrome</span>
+      <span>GLSL Shaders</span>
+    </div>
+  </div>
+
+  <div class="tip">Move cursor to deform the mercury blob</div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  
+  <script>
+    let scene, camera, renderer;
+    let blobMesh;
+    let raycaster, planeZ, mouse, mouse3D;
+    let width, height;
+    let clock = new THREE.Clock();
+
+    function init() {
+      const container = document.getElementById('canvas-container');
+      width = window.innerWidth;
+      height = window.innerHeight;
+
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
+      camera.position.z = 15;
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2(-10, -10);
+      planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+      mouse3D = new THREE.Vector3(0, 0, 0);
+
+      initLiquidBlob();
+
+      window.addEventListener('resize', onWindowResize);
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('touchmove', onTouchMove, { passive: true });
+
+      animate();
+    }
+
+    // Custom Shaders for reflective liquid metal (mercury look)
+    const vertexShaderCode = `
+      uniform float uTime;
+      uniform vec3 uMouse;
+      varying vec3 vNormal;
+      varying vec3 vViewDir;
+      varying vec3 vPosition;
+
+      // GLSL Noise helper functions
+      vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+      vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+      
+      float snoise(vec3 v) {
+        const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+        const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+        vec3 i  = floor(v + dot(v, C.yyy));
+        vec3 x0 = v - i + dot(i, C.xxx);
+        vec3 g = step(x0.yzx, x0.xyz);
+        vec3 l = 1.0 - g;
+        vec3 i1 = min(g.xyz, l.zxy);
+        vec3 i2 = max(g.xyz, l.zxy);
+        vec3 x1 = x0 - i1 + C.xxx;
+        vec3 x2 = x0 - i2 + C.yyy;
+        vec3 x3 = x0 - D.yyy;
+        i = mod289(i);
+        vec4 p = permute(permute(permute(
+                  i.z + vec4(0.0, i1.z, i2.z, 1.0))
+                + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+                + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+        float n_ = 0.142857142857;
+        vec3 ns = n_ * D.wyz - D.xzx;
+        vec4 j = p - 49.0 * floor(p * ns.z);
+        vec4 x_ = floor(j * ns.z);
+        vec4 y_ = floor(j - 7.0 * x_);
+        vec4 x = x_ *ns.x + ns.yyyy;
+        vec4 y = y_ *ns.x + ns.yyyy;
+        vec4 h = 1.0 - abs(x) - abs(y);
+        vec4 b0 = vec4(x.xy, y.xy);
+        vec4 b1 = vec4(x.zw, y.zw);
+        vec4 s0 = floor(b0)*2.0 + 1.0;
+        vec4 s1 = floor(b1)*2.0 + 1.0;
+        vec4 sh = -step(h, vec4(0.0));
+        vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+        vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+        vec3 p0 = vec3(a0.xy, h.x);
+        vec3 p1 = vec3(a0.zw, h.y);
+        vec3 p2 = vec3(a1.xy, h.z);
+        vec3 p3 = vec3(a1.zw, h.w);
+        vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+        p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+        vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+        m = m * m;
+        return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+      }
+
+      void main() {
+        vNormal = normalize(normalMatrix * normal);
+        
+        // Pass position
+        vPosition = position;
+        
+        // Calculate view direction
+        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+        vViewDir = normalize(cameraPosition - worldPosition.xyz);
+
+        // Deform blob along normal based on noise & time
+        float noise = snoise(position * 0.4 + vec3(0.0, 0.0, uTime * 0.6)) * 0.6;
+        noise += snoise(position * 0.95 - vec3(uTime * 0.3)) * 0.25;
+
+        // Attract/deform to mouse position
+        float distToMouse = distance(worldPosition.xyz, uMouse);
+        float mouseAttract = 0.0;
+        if (distToMouse < 8.0) {
+          mouseAttract = (1.0 - (distToMouse / 8.0)) * 1.5;
+          // Apply directional pull towards cursor
+          vec3 dirToMouse = normalize(uMouse - worldPosition.xyz);
+          worldPosition.xyz += dirToMouse * mouseAttract * 0.75;
+        }
+
+        // Apply normal displacement from noise
+        vec3 displacedPos = position + normal * (noise * (1.0 + mouseAttract * 0.3));
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(displacedPos, 1.0);
+      }
+    `;
+
+    const fragmentShaderCode = `
+      varying vec3 vNormal;
+      varying vec3 vViewDir;
+      varying vec3 vPosition;
+      
+      void main() {
+        vec3 normal = normalize(vNormal);
+        vec3 viewDir = normalize(vViewDir);
+
+        // Fake environmental lighting (specular reflection)
+        float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 3.0);
+
+        // Reflection direction
+        vec3 reflectDir = reflect(-viewDir, normal);
+
+        // Base metallic chrome color gradient
+        vec3 chromeBase = vec3(0.88, 0.90, 0.93);
+        
+        // Add sky reflect values (light source from top)
+        float reflectSky = max(dot(reflectDir, vec3(0.0, 1.0, 0.5)), 0.0);
+        vec3 skyColor = vec3(0.96, 0.97, 1.0) * pow(reflectSky, 2.0);
+
+        // Add floor dark value
+        float reflectFloor = max(dot(reflectDir, vec3(0.0, -1.0, 0.0)), 0.0);
+        vec3 floorColor = vec3(0.1, 0.12, 0.15) * pow(reflectFloor, 1.5);
+
+        // Mix components to create reflective chrome finish
+        vec3 finalColor = chromeBase * 0.65 + skyColor * 0.35 + floorColor * 0.15;
+        
+        // Boost specular highlight at edges (Fresnel effect)
+        finalColor += vec3(0.95, 0.97, 1.0) * fresnel * 0.6;
+
+        // Subtle soft colored highlight glow (gold-blue aberration)
+        float highlight = max(dot(normal, vec3(0.5, 0.5, 0.5)), 0.0);
+        finalColor += vec3(0.04, 0.06, 0.1) * pow(highlight, 4.0);
+
+        gl_FragColor = vec4(finalColor, 0.98);
+      }
+    `;
+
+    function initLiquidBlob() {
+      // Create high-detail sphere mesh
+      const geometry = new THREE.SphereGeometry(3.5, 128, 128);
+
+      const material = new THREE.ShaderMaterial({
+        vertexShader: vertexShaderCode,
+        fragmentShader: fragmentShaderCode,
+        uniforms: {
+          uTime: { value: 0.0 },
+          uMouse: { value: new THREE.Vector3(0, 0, 0) }
+        },
+        transparent: true
+      });
+
+      blobMesh = new THREE.Mesh(geometry, material);
+      scene.add(blobMesh);
+
+      // Add a couple of lights to help visibility (though shader calculates reflections natively)
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+      scene.add(ambientLight);
+    }
+
+    function onMouseMove(e) {
+      updateMouseCoords(e.clientX, e.clientY);
+    }
+
+    function onTouchMove(e) {
+      if (e.touches.length > 0) {
+        updateMouseCoords(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }
+
+    function updateMouseCoords(clientX, clientY) {
+      mouse.x = (clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      raycaster.ray.intersectPlane(planeZ, mouse3D);
+    }
+
+    function onWindowResize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const elapsedTime = clock.getElapsedTime();
+
+      // Pass time and 3D mouse coordinates to shaders
+      if (blobMesh) {
+        blobMesh.material.uniforms.uTime.value = elapsedTime;
+        blobMesh.material.uniforms.uMouse.value.copy(mouse3D);
+        
+        // Spin the blob very slowly for movement
+        blobMesh.rotation.y = elapsedTime * 0.05;
+        blobMesh.rotation.x = elapsedTime * 0.03;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>

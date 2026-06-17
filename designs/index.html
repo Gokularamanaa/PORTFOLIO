@@ -19,7 +19,21 @@
   <!-- Custom Styles -->
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="intro-active">
+  <!-- Cinematic Intro Overlay -->
+  <div class="intro-overlay" id="intro-overlay">
+    <button class="skip-btn" id="skip-intro-btn">Skip Intro <i class="fa-solid fa-angles-right"></i></button>
+    <div class="intro-content">
+      <h1 class="intro-title">
+        <span class="first-name" id="name-gokula">GOKULA</span>
+        <span class="last-name" id="name-ramanaa">RAMANAA</span>
+      </h1>
+      <p class="intro-subtitle" id="intro-subtitle">
+        Full Stack Developer &bull; Software Engineer &bull; Problem Solver
+      </p>
+    </div>
+  </div>
+
   <!-- WebGL / Canvas Container -->
   <div id="canvas-container"></div>
   
@@ -100,12 +114,43 @@
           <div class="color-indicator" id="color-preview"></div>
         </div>
         <div class="color-options">
-          <button class="color-dot active" data-color="#00f2fe" style="--color-theme: #00f2fe;"></button>
+          <button class="color-dot" data-color="#00f2fe" style="--color-theme: #00f2fe;"></button>
           <button class="color-dot" data-color="#ff007f" style="--color-theme: #ff007f;"></button>
           <button class="color-dot" data-color="#39ff14" style="--color-theme: #39ff14;"></button>
           <button class="color-dot" data-color="#b026ff" style="--color-theme: #b026ff;"></button>
-          <button class="color-dot" data-color="#ffaa00" style="--color-theme: #ffaa00;"></button>
+          <button class="color-dot active" data-color="#F4B43A" style="--color-theme: #F4B43A;"></button>
         </div>
+      </div>
+    </div>
+
+    <!-- Standalone Laboratory Designs -->
+    <div class="panel-section">
+      <h3>Standalone Labs</h3>
+      <div class="standalone-links" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+        <a href="vortex.html" class="standalone-btn glass-subcard" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; padding: 10px; color: var(--text-secondary); text-align: center; font-size: 0.72rem; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.04);">
+          <i class="fa-solid fa-tornado" style="font-size: 1.1rem; color: #F4B43A; margin-bottom: 6px;"></i>
+          <span>Vortex</span>
+        </a>
+        <a href="aurora.html" class="standalone-btn glass-subcard" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; padding: 10px; color: var(--text-secondary); text-align: center; font-size: 0.72rem; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.04);">
+          <i class="fa-solid fa-wind" style="font-size: 1.1rem; color: #00f2fe; margin-bottom: 6px;"></i>
+          <span>Aurora Wave</span>
+        </a>
+        <a href="cybergrid.html" class="standalone-btn glass-subcard" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; padding: 10px; color: var(--text-secondary); text-align: center; font-size: 0.72rem; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.04);">
+          <i class="fa-solid fa-border-all" style="font-size: 1.1rem; color: #ff007f; margin-bottom: 6px;"></i>
+          <span>Cyber Grid</span>
+        </a>
+        <a href="liquidmetal.html" class="standalone-btn glass-subcard" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; padding: 10px; color: var(--text-secondary); text-align: center; font-size: 0.72rem; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.04);">
+          <i class="fa-solid fa-droplet" style="font-size: 1.1rem; color: #e2e8f0; margin-bottom: 6px;"></i>
+          <span>Liquid Chrome</span>
+        </a>
+        <a href="starfield.html" class="standalone-btn glass-subcard" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; padding: 10px; color: var(--text-secondary); text-align: center; font-size: 0.72rem; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.04);">
+          <i class="fa-solid fa-rocket" style="font-size: 1.1rem; color: #a855f7; margin-bottom: 6px;"></i>
+          <span>Space Warp</span>
+        </a>
+        <a href="matrixnet.html" class="standalone-btn glass-subcard" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; padding: 10px; color: var(--text-secondary); text-align: center; font-size: 0.72rem; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.04);">
+          <i class="fa-solid fa-circle-nodes" style="font-size: 1.1rem; color: #39ff14; margin-bottom: 6px;"></i>
+          <span>Matrix Net</span>
+        </a>
       </div>
     </div>
 
