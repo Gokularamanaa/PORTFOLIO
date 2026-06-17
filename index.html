@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Antigravity Portfolio</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Portfolio featuring interactive WebGL gravity particle simulation, smooth GSAP animations, and premium glassmorphic UI.">
+  <meta name="keywords" content="Portfolio, WebGL, Three.js, GSAP, Interactive Developer, Creative Developer">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Google+Sans+Flex:opsz,slnt,wdth,wght,ROND@8..144,-10..0,25..150,300..800,0..100&display=swap" rel="stylesheet">
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- WebGL Background Canvas -->
+  <div id="particle-canvas-container"></div>
+  
+  <!-- Header / Navigation -->
+  <header class="header">
+    <div class="nav-container">
+      <a href="#" class="logo">
+        <span class="logo-dot"></span>Gokula Ramanaa
+      </a>
+      <nav class="nav-links">
+        <a href="#hero" class="active">Home</a>
+        <a href="#about">About</a>
+        <a href="#projects">Projects</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <a href="#contact" class="btn btn-secondary btn-nav">Get In Touch</a>
+    </div>
+  </header>
+
+  <!-- Main Scrollable Content -->
+  <main class="content-wrapper">
+    <!-- Hero Section -->
+    <section id="hero" class="hero-section">
+      <div class="hero-container">
+        <div class="hero-text-content">
+          <div class="badge">
+            <span class="badge-dot"></span> Available for Opportunities
+          </div>
+          <h1>Hi, I'm <br><span class="gradient-text">Gokula Ramanaa</span></h1>
+          <p class="hero-subtext">
+            Creative Developer • Full Stack Developer • Problem Solver. A Computer Science and Engineering student dedicated to building high-performance backend systems and responsive interactive browser experiences.
+          </p>
+          <div class="hero-buttons">
+            <a href="#projects" class="btn btn-primary">Explore Work</a>
+            <a href="#about" class="btn btn-outline">About Me</a>
+          </div>
+        </div>
+        
+        <div class="hero-image-content">
+          <div class="profile-card">
+            <div class="profile-glow"></div>
+            <div class="profile-inner">
+              <img src="person.png" alt="Gokula Ramanaa" class="profile-img">
+              <div class="profile-scanner"></div>
+              <div class="profile-grid-overlay"></div>
+            </div>
+            <div class="profile-details">
+              <h3>Gokula Ramanaa</h3>
+              <p>CSE Student & Full Stack Developer</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="scroll-indicator">
+        <span class="mouse-icon">
+          <span class="mouse-wheel"></span>
+        </span>
+        Scroll to explore
+      </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about-section">
+      <div class="section-container">
+        <div class="section-header">
+          <span class="section-tag">01 / About Me</span>
+          <h2>Crafting Experiences with Code & Architecture</h2>
+        </div>
+        
+        <div class="about-grid">
+          <!-- Biography / Philosophy -->
+          <div class="about-card glass-card">
+            <div class="card-icon"><i class="fa-solid fa-user-astronaut"></i></div>
+            <h3>My Journey</h3>
+            <p>
+              I am a Computer Science and Engineering student with a strong passion for software development, interactive web technologies, and problem-solving. My focus lies in building modern, scalable applications while continuously exploring emerging technologies that enhance user experiences.
+            </p>
+            <p style="margin-top: 12px; color: var(--text-muted);">
+              I enjoy transforming ideas into functional products by combining clean architecture, intuitive design, and efficient backend implementation. Beyond web development, I actively practice Data Structures and Algorithms and participate in competitive programming to strengthen my analytical thinking.
+            </p>
+          </div>
+          
+          <!-- Key Highlights -->
+          <div class="about-card glass-card">
+            <div class="card-icon"><i class="fa-solid fa-trophy"></i></div>
+            <h3>Key Highlights</h3>
+            <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; color: var(--text-muted); font-size: 0.95rem;">
+              <li><i class="fa-solid fa-graduation-cap" style="color: var(--primary-color); margin-right: 8px;"></i> CSE Student (CGPA: <strong>8.54</strong>)</li>
+              <li><i class="fa-solid fa-gears" style="color: var(--primary-color); margin-right: 8px;"></i> Spring Boot & Java Backend Developer</li>
+              <li><i class="fa-solid fa-cubes" style="color: var(--primary-color); margin-right: 8px;"></i> MERN Stack Learner & Practitioner</li>
+              <li><i class="fa-solid fa-code" style="color: var(--primary-color); margin-right: 8px;"></i> Competitive Programming Enthusiast</li>
+              <li><i class="fa-solid fa-brain" style="color: var(--primary-color); margin-right: 8px;"></i> Strong Foundation in DSA & DBMS</li>
+              <li><i class="fa-solid fa-award" style="color: var(--primary-color); margin-right: 8px;"></i> Aptitude & Logical Reasoning Winner</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Technical Skills Card (Full Width below biography) -->
+        <div class="glass-card" style="margin-top: 32px; padding: 40px;">
+          <h3 style="font-size: 1.4rem; font-weight: 600; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+            <i class="fa-solid fa-laptop-code" style="color: var(--primary-color);"></i> Technical Stack
+          </h3>
+          <div class="skills-wrapper" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px;">
+            <div>
+              <h4 style="font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">Languages</h4>
+              <div class="tech-tags">
+                <span class="tech-tag">Java</span>
+                <span class="tech-tag">JavaScript</span>
+                <span class="tech-tag">C++</span>
+                <span class="tech-tag">SQL</span>
+              </div>
+            </div>
+            <div>
+              <h4 style="font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">Frontend</h4>
+              <div class="tech-tags">
+                <span class="tech-tag">React.js</span>
+                <span class="tech-tag">HTML5</span>
+                <span class="tech-tag">CSS3</span>
+                <span class="tech-tag">Tailwind CSS</span>
+                <span class="tech-tag">Vite</span>
+                <span class="tech-tag">Responsive Design</span>
+              </div>
+            </div>
+            <div>
+              <h4 style="font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">Backend</h4>
+              <div class="tech-tags">
+                <span class="tech-tag">Spring Boot</span>
+                <span class="tech-tag">Node.js</span>
+                <span class="tech-tag">Express.js</span>
+                <span class="tech-tag">REST APIs</span>
+                <span class="tech-tag">JWT Auth</span>
+              </div>
+            </div>
+            <div>
+              <h4 style="font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">Databases & Tools</h4>
+              <div class="tech-tags">
+                <span class="tech-tag">MySQL</span>
+                <span class="tech-tag">MongoDB</span>
+                <span class="tech-tag">Git & GitHub</span>
+                <span class="tech-tag">Postman</span>
+                <span class="tech-tag">VS Code / IntelliJ</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects" class="projects-section">
+      <div class="section-container">
+        <div class="section-header">
+          <span class="section-tag">02 / Selected Work</span>
+          <h2>Visualizing Interactive Worlds</h2>
+        </div>
+        
+        <div class="projects-grid">
+          <div class="project-card glass-card">
+            <div class="project-img-wrapper">
+              <div class="project-glow"></div>
+              <div class="project-placeholder">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>WebGL Particle FBO Simulation</span>
+              </div>
+            </div>
+            <div class="project-info">
+              <h3>Antigravity Cursor Field</h3>
+              <p>A full GPU-driven particle simulation. Runs 65,000+ interactive particles inside GLSL fragment shaders, performing real-time distance calculations and ring-field displacement responsive to high-performance mouse movements.</p>
+              <div class="project-tags">
+                <span>Three.js</span>
+                <span>GLSL Shaders</span>
+                <span>FBO Sim</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Spring Boot Project -->
+          <div class="project-card glass-card">
+            <div class="project-img-wrapper">
+              <div class="project-glow"></div>
+              <div class="project-placeholder">
+                <i class="fa-solid fa-server"></i>
+                <span>Spring Boot Backend System</span>
+              </div>
+            </div>
+            <div class="project-info">
+              <h3>Scalable Java Backend Architectures</h3>
+              <p>Developed high-performance backend systems using Spring Boot, Java, and MySQL. Features secure JWT Authentication, scalable REST APIs, and database optimizations.</p>
+              <div class="project-tags">
+                <span>Spring Boot</span>
+                <span>Java</span>
+                <span>MySQL</span>
+                <span>JWT</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- MERN Stack Project -->
+          <div class="project-card glass-card">
+            <div class="project-img-wrapper">
+              <div class="project-glow"></div>
+              <div class="project-placeholder">
+                <i class="fa-solid fa-layer-group"></i>
+                <span>MERN Full Stack Application</span>
+              </div>
+            </div>
+            <div class="project-info">
+              <h3>Full Stack Web Applications</h3>
+              <p>Built modern web applications with React.js, Node.js, Express.js, and MongoDB. Focusing on responsive design, state management, and real-world utility.</p>
+              <div class="project-tags">
+                <span>React.js</span>
+                <span>Node.js</span>
+                <span>MongoDB</span>
+                <span>Express</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+      <div class="section-container">
+        <div class="section-header">
+          <span class="section-tag">03 / Connect</span>
+          <h2>Let's build the new way together</h2>
+        </div>
+        
+        <div class="contact-grid">
+          <div class="contact-info">
+            <p class="contact-lead">Have a project, a job opportunity, or just want to chat about software engineering? Reach out anytime!</p>
+            <div class="contact-methods">
+              <div class="contact-method">
+                <i class="fa-solid fa-envelope"></i>
+                <span>gokularamanaa23k@gmail.com</span>
+              </div>
+              <div class="contact-method">
+                <i class="fa-solid fa-location-dot"></i>
+                <span>Tamil Nadu, India</span>
+              </div>
+            </div>
+            <div class="social-links">
+              <a href="https://github.com/Gokularamanaa" target="_blank" class="social-link"><i class="fa-brands fa-github"></i></a>
+              <a href="https://linkedin.com/in/gokula-ramanaa-7722942a6" target="_blank" class="social-link"><i class="fa-brands fa-linkedin-in"></i></a>
+            </div>
+          </div>
+          
+          <div class="contact-form-container glass-card">
+            <form id="contact-form" onsubmit="event.preventDefault(); alert('Message sent! Thank you.');">
+              <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" required placeholder="Gokula Ramanaa">
+              </div>
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" required placeholder="gokularamanaa23k@gmail.com">
+              </div>
+              <div class="form-group">
+                <label for="message">Message</label>
+                <textarea id="message" required rows="4" placeholder="Hello, I want to build..."></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">Send Message</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>&copy; 2026 Gokula Ramanaa. All rights reserved.</p>
+      <p class="footer-sub">Built with Three.js WebGL & GSAP animations</p>
+    </footer>
+  </main>
+
+  <!-- Three.js and GSAP via CDNs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  
+  <!-- Portfolio JS -->
+  <script src="app.js"></script>
+</body>
+</html>
